@@ -10,38 +10,104 @@ masterGain.gain.value = 1.0;
 // Connect Gainnode to audio output
 masterGain.connect(myAudioContext.destination);
 
+// Create workable effects! It's all Gain Nodes and Delay Effects. JUST LABEL!!!!!!
+
+function createEcho(myAudioContext, inputNode, outputNode) {
+  const delay = new DelayNode(myAudioContext);
+  delay.delayTime.value = 0.25; //250 ms delay
+
+  const feedback = new GainNode(myAudioContext);
+  feedback.gain.value = 0.4;
+
+  const wetGain = new GainNode(myAudioContext);
+  wetGain.gain.value = 0.4;
+
+  const dryGain = new GainNode(myAudioContext);
+  dryGain.gain.value = 1.0;
+
+  // Dry path
+  inputNode.connect(dryGain);
+  dryGain.connect(outputNode);
+
+  // Wet path (echo)
+  inputNode.connect(delay);
+  delay.connect(feedback);
+  feedback.connect(delay); //feedback loop
+  delay.connect(wetGain);
+  wetGain.connect(outputNode);
+
+  return {
+    delay,
+    feedback,
+    wetGain,
+    dryGain,
+  };
+}
+
+// function createReverb(myAudioContext, inputNode, outputNode) {
+
+//   const convolver = ConvolverNode(myAudioContext)
+//   convolver.
+// }
+
+// The Main FX Bus
+const fxInput = new GainNode(myAudioContext);
+fxInput.gain.value = 1.0;
+
+// Apply echo between fxInput and masterGain
+const echo = createEcho(myAudioContext, fxInput, masterGain);
+
+// Add controllable sliders for the effects
+
+//Echo Delay sliders
+const delaySlider = document.getElementById("delaySlider");
+
+delaySlider.oninput = (e) => {
+  echo.delay.delayTime.setValueAtTime(
+    parseFloat(e.target.value) * 0.8, // 0 to 0.8 sec for mapping values
+    myAudioContext.currentTime,
+  );
+};
+
+const wetSlider1 = document.getElementById("wetSlider");
+
+wetSlider1.oninput = (e) => {
+  echo.wetGain.gain.setValueAtTime(
+    parseFloat(e.target.value),
+    myAudioContext.currentTime,
+  );
+};
+
+//Reverb sliders
+
 // Play audio files for the different fruits
 
 const pineapple = new audioPlayer(
   myAudioContext,
-  masterGain,
+  fxInput,
   "pineappleExcerpt.flac",
 );
-const banana = new audioPlayer(
-  myAudioContext,
-  masterGain,
-  "bananaExcerpt.flac",
-);
-const fig = new audioPlayer(myAudioContext, masterGain, "figExcerpt.flac");
+const banana = new audioPlayer(myAudioContext, fxInput, "bananaExcerpt.flac");
+const fig = new audioPlayer(myAudioContext, fxInput, "figExcerpt.flac");
 const pomegranate = new audioPlayer(
   myAudioContext,
-  masterGain,
+  fxInput,
   "pomegranateExcerpt.flac",
 );
 const strawberry = new audioPlayer(
   myAudioContext,
-  masterGain,
+  fxInput,
   "strawberryExcerpt.flac",
 );
-const guava = new audioPlayer(myAudioContext, masterGain, "guavaExcerpt.flac");
+const guava = new audioPlayer(myAudioContext, fxInput, "guavaExcerpt.flac");
 const watermelon = new audioPlayer(
   myAudioContext,
-  masterGain,
+  fxInput,
   "watermelonExcerpt.flac",
 );
 const cantaloupe = new audioPlayer(
   myAudioContext,
-  masterGain,
+  fxInput,
   "cantaloupeExcerpt.flac",
 );
 
