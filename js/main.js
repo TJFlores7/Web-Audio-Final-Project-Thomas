@@ -17,6 +17,8 @@ const now = myAudioContext.currentTime;
 
 // Create workable effects! It's all Gain Nodes and Delay Effects. JUST LABEL!!!!!!
 
+// Echo Delay effect
+
 function createEcho(myAudioContext, inputNode, outputNode) {
   const delay = new DelayNode(myAudioContext);
   delay.delayTime.value = 0.25; //250 ms delay
@@ -49,13 +51,7 @@ function createEcho(myAudioContext, inputNode, outputNode) {
   };
 }
 
-// Reverb effect
-
-// function createReverb(myAudioContext, inputNode, outputNode) {
-
-//   const convolver = ConvolverNode(myAudioContext)
-//   convolver.
-// }
+//-------------------------------------------------------------------------------------
 
 // Flanger effect
 
@@ -105,6 +101,52 @@ function createFlanger(myAudioContext, inputNode, outputNode) {
 
 //-------------------------------------------------------------------------------------
 
+//Reverb effect
+
+function createReverb(myAudioContext, inputNode, outputNode, impulseURL) {
+  const convolver = myAudioContext.createConvolver();
+
+  const dryGain3 = myAudioContext.createGain();
+  const wetGain3 = myAudioContext.createGain();
+
+  dryGain3.gain.value = 0.7;
+  wetGain3.gain.value = 0.3;
+
+  //Dry Path
+  inputNode.connect(dryGain3);
+  dryGain3.connect(outputNode);
+
+  //Wet Path
+  inputNode.connect(convolver);
+  convolver.connect(wetGain3);
+  wetGain3.connect(outputNode);
+
+  //Load impulse response
+
+  async function loadImpulse() {
+    try {
+      const response = await fetch(impulseURL);
+      const arrayBuffer = await response.arrayBuffer();
+      const audioBuffer = await myAudioContext.decodeAudioData(arrayBuffer);
+      convolver.buffer = audioBuffer;
+
+      console.log("Impulse loaded successfully");
+    } catch (err) {
+      console.error("Impulse failed to load:", err);
+    }
+  }
+
+  loadImpulse();
+
+  return {
+    convolver,
+    dryGain3,
+    wetGain3,
+  };
+}
+
+//-------------------------------------------------------------------------------------
+
 // The Main FX Bus
 const fxInput = new GainNode(myAudioContext);
 fxInput.gain.value = 1.0;
@@ -114,6 +156,14 @@ const echo = createEcho(myAudioContext, fxInput, masterGain);
 
 // Apply flanger between fxInput and masterGain
 const flanger = createFlanger(myAudioContext, fxInput, masterGain);
+
+// Apply reverb between fxInput and masterGain
+const reverb = createReverb(
+  myAudioContext,
+  fxInput,
+  masterGain,
+  "audio/impulse_response_cathedral.wav",
+);
 
 //-------------------------------------------------------------------------------------
 
@@ -138,7 +188,7 @@ wetSlider1.oninput = (e) => {
   );
 };
 
-//Reverb sliders
+//-------------------------------------------------------------------------------------
 
 //Flanger sliders
 const delaySlider2 = document.getElementById("delaySlider2");
@@ -176,6 +226,18 @@ wetSlider2.oninput = (e) => {
   flanger.wetGain2.gain.linearRampToValueAtTime(
     parseFloat(e.target.value),
     now + 0.02,
+  );
+};
+
+//-------------------------------------------------------------------------------------
+
+//Reverb sliders
+const wetSlider3 = document.getElementById("wetSlider3");
+
+wetSlider3.oninput = (e) => {
+  reverb.wetGain3.gain.setValueAtTime(
+    parseFloat(e.target.value),
+    myAudioContext.currentTime,
   );
 };
 
