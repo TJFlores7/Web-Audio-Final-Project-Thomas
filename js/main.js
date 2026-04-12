@@ -1,4 +1,3 @@
-import { dbtoa, atodb, mtof, ftom } from "./MusicTools.js";
 import { audioPlayer } from "./audioBufferClass.js";
 
 const myAudioContext = new AudioContext();
@@ -9,9 +8,6 @@ masterGain.gain.value = 0.7;
 
 // Connect Gainnode to audio output
 masterGain.connect(myAudioContext.destination);
-
-// for Smoothing purposes for the sliders in real time
-const now = myAudioContext.currentTime;
 
 //-------------------------------------------------------------------------------------
 
@@ -194,6 +190,8 @@ wetSlider1.oninput = (e) => {
 const delaySlider2 = document.getElementById("delaySlider2");
 
 delaySlider2.oninput = (e) => {
+  const now = myAudioContext.currentTime;
+
   flanger.delay2.delayTime.cancelScheduledValues(now);
   flanger.delay2.delayTime.linearRampToValueAtTime(
     parseFloat(e.target.value),
@@ -203,6 +201,8 @@ delaySlider2.oninput = (e) => {
 
 const lfoSlider = document.getElementById("lfoSlider");
 lfoSlider.oninput = (e) => {
+  const now = myAudioContext.currentTime;
+
   flanger.lfo.frequency.cancelScheduledValues(now);
   flanger.lfo.frequency.linearRampToValueAtTime(
     parseFloat(e.target.value),
@@ -212,6 +212,8 @@ lfoSlider.oninput = (e) => {
 
 const lfoGainSlider = document.getElementById("lfoGainSlider");
 lfoGainSlider.oninput = (e) => {
+  const now = myAudioContext.currentTime;
+
   flanger.lfoGain.gain.cancelScheduledValues(now);
   flanger.lfoGain.gain.linearRampToValueAtTime(
     parseFloat(e.target.value),
@@ -245,61 +247,179 @@ wetSlider3.oninput = (e) => {
 
 // Play audio files for the different fruits
 
-const pineapple = new audioPlayer(
-  myAudioContext,
-  fxInput,
-  "audio/pineappleExcerpt.flac",
-);
-const banana = new audioPlayer(
-  myAudioContext,
-  fxInput,
-  "audio/bananaExcerpt.flac",
-);
-const fig = new audioPlayer(myAudioContext, fxInput, "audio/figExcerpt.flac");
-const pomegranate = new audioPlayer(
-  myAudioContext,
-  fxInput,
-  "audio/pomegranateExcerpt.flac",
-);
-const strawberry = new audioPlayer(
-  myAudioContext,
-  fxInput,
-  "audio/strawberryExcerpt.flac",
-);
-const guava = new audioPlayer(
-  myAudioContext,
-  fxInput,
-  "audio/guavaExcerpt.flac",
-);
-const watermelon = new audioPlayer(
-  myAudioContext,
-  fxInput,
-  "audio/watermelonExcerpt.flac",
-);
-const cantaloupe = new audioPlayer(
-  myAudioContext,
-  fxInput,
-  "audio/cantaloupeExcerpt.flac",
-);
+function createFruitPlayer(url) {
+  const input = new GainNode(myAudioContext);
+
+  const echo = createEcho(myAudioContext, input, masterGain);
+  const flanger = createFlanger(myAudioContext, input, masterGain);
+  const reverb = createReverb(
+    myAudioContext,
+    input,
+    masterGain,
+    "audio/Casa Grande Domes Arizona.wav",
+  );
+
+  const player = new audioPlayer(myAudioContext, input, url);
+
+  return {
+    player,
+    echo,
+    flanger,
+    reverb,
+    input,
+  };
+}
+
+const pineapple = createFruitPlayer("audio/pineappleExcerpt.flac");
+const banana = createFruitPlayer("audio/bananaExcerpt.flac");
+const fig = createFruitPlayer("audio/figExcerpt.flac");
+const pomegranate = createFruitPlayer("audio/pomegranateExcerpt.flac");
+const strawberry = createFruitPlayer("audio/strawberryExcerpt.flac");
+const guava = new createFruitPlayer("audio/guavaExcerpt.flac");
+const watermelon = createFruitPlayer("audio/watermelonExcerpt.flac");
+const cantaloupe = createFruitPlayer("audio/cantaloupeExcerpt.flac");
 
 // Load audio files
 await Promise.all([
-  pineapple.load(),
-  banana.load(),
-  fig.load(),
-  pomegranate.load(),
-  strawberry.load(),
-  guava.load(),
-  watermelon.load(),
-  cantaloupe.load(),
+  pineapple.player.load(),
+  banana.player.load(),
+  fig.player.load(),
+  pomegranate.player.load(),
+  strawberry.player.load(),
+  guava.player.load(),
+  watermelon.player.load(),
+  cantaloupe.player.load(),
 ]);
 
 // Buttons for audio files to play
-document.getElementById("pineappleBtn").onclick = () => pineapple.play();
-document.getElementById("bananaBtn").onclick = () => banana.play();
-document.getElementById("figBtn").onclick = () => fig.play();
-document.getElementById("pomegranateBtn").onclick = () => pomegranate.play();
-document.getElementById("strawberryBtn").onclick = () => strawberry.play();
-document.getElementById("guavaBtn").onclick = () => guava.play();
-document.getElementById("watermelonBtn").onclick = () => watermelon.play();
-document.getElementById("cantaloupeBtn").onclick = () => cantaloupe.play();
+document.getElementById("pineapple").onclick = () => pineapple.player.play();
+document.getElementById("banana").onclick = () => banana.player.play();
+document.getElementById("fig").onclick = () => fig.player.play();
+document.getElementById("pomegranate").onclick = () =>
+  pomegranate.player.play();
+document.getElementById("strawberry").onclick = () => strawberry.player.play();
+document.getElementById("guava").onclick = () => guava.player.play();
+document.getElementById("watermelon").onclick = () => watermelon.player.play();
+document.getElementById("cantaloupe").onclick = () => cantaloupe.player.play();
+
+//-------------------------------------------------------------------------------------
+
+// Create Fruit Interactions
+
+function enableFruitInteraction(fruit) {
+  fruit.addEventListener("click", () => {
+    const players = {
+      pineapple,
+      banana,
+      fig,
+      pomegranate,
+      strawberry,
+      guava,
+      watermelon,
+      cantaloupe,
+    };
+
+    players[fruit.id]?.player.play();
+  });
+}
+
+// Adding the fruit drag event
+let draggedFruit = null;
+
+document.querySelectorAll(".fruit").forEach((fruit) => {
+  fruit.addEventListener("dragstart", (e) => {
+    draggedFruit = fruit;
+  });
+});
+
+// Allowing the drop in the interaction zone
+const zone = document.getElementById("interaction-zone");
+
+zone.addEventListener("dragover", (e) => {
+  e.preventDefault();
+});
+
+zone.addEventListener("drop", (e) => {
+  e.preventDefault();
+
+  const existing = zone.querySelector(`#${draggedFruit.id}`);
+
+  if (existing) {
+    existing.style.left = `${e.offsetX}px`;
+    existing.style.top = `${e.offsetY}px`;
+  } else {
+    const clone = draggedFruit.cloneNode(true);
+
+    clone.style.position = "absolute";
+    clone.style.left = `${e.offsetX}px`;
+    clone.style.top = `${e.offsetY}px`;
+
+    zone.appendChild(clone);
+
+    enableFruitInteraction(clone);
+
+    clone.draggable = true;
+
+    clone.addEventListener("dragstart", () => {
+      draggedFruit = clone;
+    });
+  }
+});
+
+// Fruit response to position
+
+function updateFruitAudio(fruit) {
+  const rect = zone.getBoundingClientRect();
+  const fruitRect = fruit.getBoundingClientRect();
+
+  const x = (fruitRect.left - rect.left) / rect.width;
+  const y = (fruitRect.top - rect.top) / rect.height;
+
+  const now = myAudioContext.currentTime;
+
+  const players = {
+    pineapple,
+    banana,
+    fig,
+    pomegranate,
+    strawberry,
+    guava,
+    watermelon,
+    cantaloupe,
+  };
+
+  const fruitObj = players[fruit.id];
+
+  if (!fruitObj) return;
+
+  //effect mappings for each fruit
+
+  // Echo delay
+  fruitObj.echo.delay.delayTime.linearRampToValueAtTime(x * 0.8, now + 0.05);
+  fruitObj.echo.wetGain.gain.linearRampToValueAtTime(y, now + 0.05);
+
+  // Flanger
+  fruitObj.flanger.lfo.frequency.linearRampToValueAtTime(
+    0.1 + x * 5,
+    now + 0.05,
+  );
+  fruitObj.flanger.wetGain2.gain.linearRampToValueAtTime(y, now + 0.05);
+
+  // Reverb
+  fruitObj.reverb.wetGain3.gain.linearRampToValueAtTime(y, now + 0.05);
+
+  //Volume (top = louder)
+  fruit.style.opacity = 0.5 + (1 - y);
+  //Visual glow
+  fruit.style.transform = `scale${1 + x * 0.3}`;
+}
+
+function animate() {
+  document.querySelectorAll("#interaction-zone .fruit").forEach((fruit) => {
+    updateFruitAudio(fruit);
+  });
+
+  requestAnimationFrame(animate);
+}
+
+animate();

@@ -1,0 +1,63 @@
+#app {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+}
+
+/* Performance Area*/
+#interaction-zone {
+  flex: 1;
+  position: relative;
+  background: black;
+  border: 2px solid #222;
+  background:
+    linear-gradient(to right, blue, red), linear-gradient(to top, black, white);
+  background-blend-mode: screen;
+}
+
+/* Labeling the effect areas in the interaction-zone*/
+.label {
+  position: absolute;
+  color: white;
+  font-size: 14px;
+  opacity: 0.7;
+}
+
+.top-left {
+  top: 20px;
+  left: 20px;
+}
+.top-right {
+  top: 20px;
+  right: 20px;
+}
+.bottom-left {
+  bottom: 20px;
+  left: 20px;
+}
+.bottom-right {
+  bottom: 20px;
+  right: 20px;
+}
+
+/*Botton dock*/
+#fruit-dock {
+  height: 120px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 20px;
+  background: #111;
+}
+
+/* Fruit Styling */
+.fruit {
+  width: 80px;
+  height: 80px;
+  cursor: grab;
+  transition: transform 0.2s;
+}
+
+.fruit:hover {
+  transform: scale(1.1);
+}

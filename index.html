@@ -4,67 +4,121 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Web Audio Final Project Spring 2026</title>
-  </head>
-  <h1>Fruit Basket's Taste Test</h1>
-  <h1>Thomas J. Flores</h1>
-  <script type="module" src="js/main.js"></script>
-  <script
-    type="module"
-    src="https://cdn.jsdelivr.net/npm/p5@1.11.12/lib/p5.min.js"
-  ></script>
-  <body>
-    <button id="pineappleBtn">Pineapple</button>
-    <button id="bananaBtn">Banana</button>
-    <button id="figBtn">Fig</button>
-    <button id="pomegranateBtn">Pomegranate</button>
-    <button id="strawberryBtn">Strawberry</button>
-    <button id="guavaBtn">Guava</button>
-    <button id="watermelonBtn">Watermelon</button>
-    <button id="cantaloupeBtn">Cantaloupe</button>
-    <h2>Main FX Bus sliders</h2>
-    <h4>Echo Delay</h4>
 
-    <div class="container">
-      <label for="myRange">Delay Time</label>
-      <input type="range" min="0" max="1" step="0.01" id="delaySlider" />
+    <script type="module" src="js/main.js"></script>
+
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+
+  <body>
+    <h1>Fruit Basket's Taste Test</h1>
+    <h2>Thomas J. Flores</h2>
+
+    <div id="app">
+      // Main Interaction zone
+      <div id="interaction-zone">
+        <div class="label top-left">Dry</div>
+        <div class="label top-right">Fast / Bright</div>
+        <div class="label bottom-left">Dark</div>
+        <div class="label bottom-right">Wet / Ambient</div>
+      </div>
+
+      // The main fruits
+      <div id="fruit-dock">
+        <img
+          src="imgs/Pineapple_icon.png"
+          class="fruit"
+          id="pineapple"
+          draggable="true"
+        />
+        <img
+          src="imgs/Banana_icon.png"
+          class="fruit"
+          id="banana"
+          draggable="true"
+        />
+        <img src="imgs/Fig_icon.png" class="fruit" id="fig" draggable="true" />
+        <img
+          src="imgs/Pomegranate_icon.png"
+          class="fruit"
+          id="pomegranate"
+          draggable="true"
+        />
+        <img
+          src="imgs/Strawberry_icon.png"
+          class="fruit"
+          id="strawberry"
+          draggable="true"
+        />
+        <img
+          src="imgs/Guava_icon.png"
+          class="fruit"
+          id="guava"
+          draggable="true"
+        />
+        <img
+          src="imgs/Watermelon_icon.png"
+          class="fruit"
+          id="watermelon"
+          draggable="true"
+        />
+        <img
+          src="imgs/Cantaloupe_icon.png"
+          class="fruit"
+          id="cantaloupe"
+          draggable="true"
+        />
+      </div>
     </div>
-    <div class="container">
-      <label for="myRange">Wet Gain</label>
-      <input type="range" min="0" max="1" step="0.01" id="wetSlider" />
-    </div>
-    <h4>Flanger</h4>
-    <div class="container">
-      <label for="myRange">Delay Time</label>
-      <input
-        type="range"
-        min="0.0005"
-        max="0.015"
-        step="0.0005"
-        id="delaySlider2"
-      />
-    </div>
-    <div class="container">
-      <label for="myRange">LFO</label>
-      <input type="range" min="0.01" max="10" step="0.01" id="lfoSlider" />
-    </div>
-    <div class="container">
-      <label for="myRange">LFO Depth</label>
-      <input
-        type="range"
-        min="0.0001"
-        max="0.005"
-        step="0.0001"
-        id="lfoGainSlider"
-      />
-    </div>
-    <div class="container">
-      <label for="myRange">Wet Gain</label>
-      <input type="range" min="0" max="1" step="0.01" id="wetSlider2" />
-    </div>
-    <h4>Reverb</h4>
-    <div class="container">
-      <label for="myrange">Wet Gain</label>
-      <input type="range" min="0" max="1" step="0.01" id="wetSlider3" />
+
+    //Backup FX sliders
+
+    <div id="fx-panel">
+      <h2>Main FX Bus sliders</h2>
+      <h4>Echo Delay</h4>
+
+      <div class="container">
+        <label for="myRange">Delay Time</label>
+        <input type="range" min="0" max="1" step="0.01" id="delaySlider" />
+      </div>
+      <div class="container">
+        <label for="myRange">Wet Gain</label>
+        <input type="range" min="0" max="1" step="0.01" id="wetSlider" />
+      </div>
+      <h4>Flanger</h4>
+      <div class="container">
+        <label for="myRange">Delay Time</label>
+        <input
+          type="range"
+          min="0.0005"
+          max="0.01"
+          step="0.0005"
+          id="delaySlider2"
+        />
+      </div>
+      <div class="container">
+        <label for="myRange">LFO</label>
+        <input type="range" min="0.01" max="10" step="0.01" id="lfoSlider" />
+      </div>
+      <div class="container">
+        <label for="myRange">LFO Depth</label>
+        <input
+          type="range"
+          min="0.0001"
+          max="0.001"
+          step="0.0001"
+          id="lfoGainSlider"
+        />
+      </div>
+      <div class="container">
+        <label for="myRange">Wet Gain</label>
+        <input type="range" min="0" max="1" step="0.01" id="wetSlider2" />
+      </div>
+      <h4>Reverb</h4>
+      <div class="container">
+        <label for="myrange">Wet Gain</label>
+        <input type="range" min="0" max="1" step="0.01" id="wetSlider3" />
+      </div>
     </div>
   </body>
 </html>
