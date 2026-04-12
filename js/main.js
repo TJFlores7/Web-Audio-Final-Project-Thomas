@@ -5,7 +5,7 @@ const myAudioContext = new AudioContext();
 
 // Overall volume
 const masterGain = myAudioContext.createGain();
-masterGain.gain.value = 1.0;
+masterGain.gain.value = 0.7;
 
 // Connect Gainnode to audio output
 masterGain.connect(myAudioContext.destination);
@@ -162,7 +162,7 @@ const reverb = createReverb(
   myAudioContext,
   fxInput,
   masterGain,
-  "audio/impulse_response_cathedral.wav",
+  "audio/Casa Grande Domes Arizona.wav",
 );
 
 //-------------------------------------------------------------------------------------
