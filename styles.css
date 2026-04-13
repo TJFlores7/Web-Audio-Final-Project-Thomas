@@ -1,3 +1,12 @@
+.project-title {
+  display: flex;
+  flex-direction: column; /* Stack headings vertically */
+  align-items: center; /* Center vertically */
+  font-family: "Press Start 2P", monospace;
+  color: #8c001a; /* Retro coral color */
+  text-shadow: 2px 2px 0px black;
+  letter-spacing: 2px;
+}
 #app {
   display: flex;
   flex-direction: column;
