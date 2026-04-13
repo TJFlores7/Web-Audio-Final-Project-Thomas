@@ -384,6 +384,8 @@ window.addEventListener("pointerup", () => {
   activeFruit = null;
 });
 
+// Old code that used "dragstart" and "drop" with uses of clone
+
 // let draggedFruit = null;
 
 // document.querySelectorAll(".fruit").forEach((fruit) => {
@@ -443,9 +445,6 @@ function updateFruitAudio(fruit) {
   const x = (fruitRect.left - rect.left) / rect.width;
   const y = (fruitRect.top - rect.top) / rect.height;
 
-  const isLeft = x < 0.5;
-  const isTop = y < 0.5;
-
   // Distance from center (center is dry zone)
   const disFromCenter = Math.sqrt((x - 0.5) ** 2 + (y - 0.5) ** 2);
   const isCenter = disFromCenter < 0.15; // subject to change
@@ -470,8 +469,6 @@ function updateFruitAudio(fruit) {
   //effect mappings for each fruit
 
   //Gradual change control
-  const dx = x - 0.5;
-  const dy = y - 0.5;
 
   const top = Math.max(0, 1 - y);
   const bottom = Math.max(0, y);
@@ -482,7 +479,11 @@ function updateFruitAudio(fruit) {
   const flangerAmount = bottom * left;
   const reverbAmount = bottom * right;
 
-  const distance = Math.sqrt(dx * dx + dy * dy);
+  if (isCenter) {
+    fruitObj.echo.wetGain.gain.value = 0;
+    fruitObj.flanger.wetGain2.gain.value = 0;
+    fruitObj.reverb.wetGain3.gain.value = 0;
+  }
 
   // Echo delay
   fruitObj.echo.delay.delayTime.linearRampToValueAtTime(x * 0.8, now + 0.05);
