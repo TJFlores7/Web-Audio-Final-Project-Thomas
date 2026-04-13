@@ -224,6 +224,7 @@ lfoGainSlider.oninput = (e) => {
 const wetSlider2 = document.getElementById("wetSlider2");
 
 wetSlider2.oninput = (e) => {
+  const now = myAudioContext.currentTime;
   flanger.wetGain2.gain.cancelScheduledValues(now);
   flanger.wetGain2.gain.linearRampToValueAtTime(
     parseFloat(e.target.value),
@@ -343,23 +344,27 @@ zone.addEventListener("drop", (e) => {
   e.preventDefault();
 
   const existing = zone.querySelector(`#${draggedFruit.id}`);
+  const rect = zone.getBoundingClientRect();
+  const size = 60; // half of fruit width
+
+  const x = e.clientX - rect.left;
+  const y = e.clientY - rect.top;
 
   if (existing) {
-    existing.style.left = `${e.offsetX}px`;
-    existing.style.top = `${e.offsetY}px`;
+    existing.style.left = `${x - size}px`;
+    existing.style.top = `${y - size}px`;
   } else {
     const clone = draggedFruit.cloneNode(true);
 
     clone.style.position = "absolute";
-    clone.style.left = `${e.offsetX}px`;
-    clone.style.top = `${e.offsetY}px`;
+    clone.style.left = `${x - size}px`;
+    clone.style.top = `${y - size}px`;
 
     zone.appendChild(clone);
 
     enableFruitInteraction(clone);
 
     clone.draggable = true;
-
     clone.addEventListener("dragstart", () => {
       draggedFruit = clone;
     });

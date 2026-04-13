@@ -24,20 +24,28 @@
 }
 
 .top-left {
-  top: 20px;
-  left: 20px;
+  top: 40px;
+  left: 40px;
+  color: black;
+  font-size: 150%;
 }
 .top-right {
-  top: 20px;
-  right: 20px;
+  top: 40px;
+  right: 40px;
+  color: black;
+  font-size: 150%;
 }
 .bottom-left {
-  bottom: 20px;
-  left: 20px;
+  bottom: 40px;
+  left: 40px;
+  color: black;
+  font-size: 150%;
 }
 .bottom-right {
-  bottom: 20px;
-  right: 20px;
+  bottom: 40px;
+  right: 40px;
+  color: black;
+  font-size: 150%;
 }
 
 /*Botton dock*/
@@ -52,8 +60,8 @@
 
 /* Fruit Styling */
 .fruit {
-  width: 80px;
-  height: 80px;
+  width: 120px;
+  height: 120px;
   cursor: grab;
   transition: transform 0.2s;
 }
