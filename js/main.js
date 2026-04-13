@@ -516,10 +516,3 @@ function animate() {
 }
 
 animate();
-
-// zone.addEventListener("mousedown", (e) => {
-//   console.log("mousedown", e.target);
-//   if (e.target.classList.contains("fruit")) {
-//     activeFruit = e.target;
-//   }
-// });
