@@ -307,8 +307,16 @@ document.getElementById("cantaloupe").onclick = () => cantaloupe.player.play();
 
 // Create Fruit Interactions
 
+document.querySelectorAll(".fruit").forEach((fruit) => {
+  fruit.draggable = false;
+});
+
+document.querySelectorAll(".fruit").forEach((fruit) => {
+  enableFruitInteraction(fruit);
+});
+
 function enableFruitInteraction(fruit) {
-  fruit.addEventListener("click", () => {
+  fruit.addEventListener("pointerdown", () => {
     const players = {
       pineapple,
       banana,
@@ -324,54 +332,105 @@ function enableFruitInteraction(fruit) {
   });
 }
 
-// Adding the fruit drag event
-let draggedFruit = null;
-
-document.querySelectorAll(".fruit").forEach((fruit) => {
-  fruit.addEventListener("dragstart", (e) => {
-    draggedFruit = fruit;
-  });
-});
-
-//-------------------------------------------------------------------------------------
-
-// Allowing the drop in the interaction zone
+// Adding the fruit "drag" event
 const zone = document.getElementById("interaction-zone");
+let activeFruit = null;
 
-zone.addEventListener("dragover", (e) => {
-  e.preventDefault();
+document.addEventListener("pointerdown", (e) => {
+  if (e.target.classList.contains("fruit")) {
+    activeFruit = e.target;
+
+    const rect = zone.getBoundingClientRect();
+
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+
+    const fruitRect = activeFruit.getBoundingClientRect();
+    const offsetX = fruitRect.width / 2;
+    const offsetY = fruitRect.height / 2;
+
+    //make it draggable
+    zone.appendChild(activeFruit);
+    activeFruit.style.position = "absolute";
+
+    //move it into the interaction zone by your cursor
+    activeFruit.style.left = `${x - offsetX}px`;
+    activeFruit.style.top = `${y - offsetY}px`;
+  }
 });
 
-zone.addEventListener("drop", (e) => {
-  e.preventDefault();
+//Moving fruit in real time
+zone.addEventListener("pointermove", (e) => {
+  if (!activeFruit) return;
 
-  const existing = zone.querySelector(`#${draggedFruit.id}`);
   const rect = zone.getBoundingClientRect();
-  const size = 60; // half of fruit width
 
   const x = e.clientX - rect.left;
   const y = e.clientY - rect.top;
 
-  if (existing) {
-    existing.style.left = `${x - size}px`;
-    existing.style.top = `${y - size}px`;
-  } else {
-    const clone = draggedFruit.cloneNode(true);
+  const fruitRect = activeFruit.getBoundingClientRect();
 
-    clone.style.position = "absolute";
-    clone.style.left = `${x - size}px`;
-    clone.style.top = `${y - size}px`;
+  const offsetX = fruitRect.width / 2;
+  const offsetY = fruitRect.height / 2;
 
-    zone.appendChild(clone);
+  activeFruit.style.left = `${x - offsetX}px`;
+  activeFruit.style.top = `${y - offsetY}px`;
 
-    enableFruitInteraction(clone);
-
-    clone.draggable = true;
-    clone.addEventListener("dragstart", () => {
-      draggedFruit = clone;
-    });
-  }
+  updateFruitAudio(activeFruit);
 });
+
+//Stop drag event
+window.addEventListener("pointerup", () => {
+  activeFruit = null;
+});
+
+// let draggedFruit = null;
+
+// document.querySelectorAll(".fruit").forEach((fruit) => {
+//   fruit.addEventListener("dragstart", (e) => {
+//     draggedFruit = fruit;
+//   });
+// });
+
+// //-------------------------------------------------------------------------------------
+
+// // Allowing the drop in the interaction zone
+// const zone = document.getElementById("interaction-zone");
+
+// zone.addEventListener("dragover", (e) => {
+//   e.preventDefault();
+// });
+
+// zone.addEventListener("drop", (e) => {
+//   e.preventDefault();
+
+//   const existing = zone.querySelector(`#${draggedFruit.id}`);
+//   const rect = zone.getBoundingClientRect();
+//   const size = 60; // half of fruit width
+
+//   const x = e.clientX - rect.left;
+//   const y = e.clientY - rect.top;
+
+//   if (existing) {
+//     existing.style.left = `${x - size}px`;
+//     existing.style.top = `${y - size}px`;
+//   } else {
+//     const clone = draggedFruit.cloneNode(true);
+
+//     clone.style.position = "absolute";
+//     clone.style.left = `${x - size}px`;
+//     clone.style.top = `${y - size}px`;
+
+//     zone.appendChild(clone);
+
+//     enableFruitInteraction(clone);
+
+//     clone.draggable = true;
+//     clone.addEventListener("dragstart", () => {
+//       draggedFruit = clone;
+//     });
+//   }
+// });
 
 //-------------------------------------------------------------------------------------
 
@@ -383,6 +442,13 @@ function updateFruitAudio(fruit) {
 
   const x = (fruitRect.left - rect.left) / rect.width;
   const y = (fruitRect.top - rect.top) / rect.height;
+
+  const isLeft = x < 0.5;
+  const isTop = y < 0.5;
+
+  // Distance from center (center is dry zone)
+  const disFromCenter = Math.sqrt((x - 0.5) ** 2 + (y - 0.5) ** 2);
+  const isCenter = disFromCenter < 0.15; // subject to change
 
   const now = myAudioContext.currentTime;
 
@@ -403,24 +469,42 @@ function updateFruitAudio(fruit) {
 
   //effect mappings for each fruit
 
+  //Gradual change control
+  const dx = x - 0.5;
+  const dy = y - 0.5;
+
+  const top = Math.max(0, 1 - y);
+  const bottom = Math.max(0, y);
+  const left = Math.max(0, 1 - x);
+  const right = Math.max(0, x);
+
+  const echoAmount = Math.pow(top * left, 1.5);
+  const flangerAmount = bottom * left;
+  const reverbAmount = bottom * right;
+
+  const distance = Math.sqrt(dx * dx + dy * dy);
+
   // Echo delay
   fruitObj.echo.delay.delayTime.linearRampToValueAtTime(x * 0.8, now + 0.05);
-  fruitObj.echo.wetGain.gain.linearRampToValueAtTime(y, now + 0.05);
+  fruitObj.echo.wetGain.gain.value = echoAmount;
 
   // Flanger
   fruitObj.flanger.lfo.frequency.linearRampToValueAtTime(
     0.1 + x * 5,
     now + 0.05,
   );
-  fruitObj.flanger.wetGain2.gain.linearRampToValueAtTime(y, now + 0.05);
+  fruitObj.flanger.wetGain2.gain.value = flangerAmount;
 
   // Reverb
-  fruitObj.reverb.wetGain3.gain.linearRampToValueAtTime(y, now + 0.05);
+
+  fruitObj.reverb.wetGain3.gain.value = reverbAmount;
+
+  // all wet gains are set to 0 so it should be dry
 
   //Volume (top = louder)
   fruit.style.opacity = 0.5 + (1 - y);
   //Visual glow
-  fruit.style.transform = `scale${1 + x * 0.3}`;
+  fruit.style.transform = `scale(${1 + x * 0.3})`;
 }
 
 function animate() {
@@ -432,3 +516,10 @@ function animate() {
 }
 
 animate();
+
+// zone.addEventListener("mousedown", (e) => {
+//   console.log("mousedown", e.target);
+//   if (e.target.classList.contains("fruit")) {
+//     activeFruit = e.target;
+//   }
+// });
