@@ -4,7 +4,7 @@ const myAudioContext = new AudioContext();
 
 // Overall volume
 const masterGain = myAudioContext.createGain();
-masterGain.gain.value = 0.7;
+masterGain.gain.value = 0.4;
 
 // Connect Gainnode to audio output
 masterGain.connect(myAudioContext.destination);
