@@ -333,6 +333,8 @@ document.querySelectorAll(".fruit").forEach((fruit) => {
   });
 });
 
+//-------------------------------------------------------------------------------------
+
 // Allowing the drop in the interaction zone
 const zone = document.getElementById("interaction-zone");
 
@@ -370,6 +372,8 @@ zone.addEventListener("drop", (e) => {
     });
   }
 });
+
+//-------------------------------------------------------------------------------------
 
 // Fruit response to position
 
