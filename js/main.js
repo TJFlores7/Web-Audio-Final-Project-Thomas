@@ -490,10 +490,12 @@ function updateFruitAudio(fruit) {
   // all wet gains are set to 0 so it should be dry
 
   //Volume (top = louder)
-  fruit.style.opacity = 0.5 + (1 - y);
+  fruit.style.opacity = 1 - y * 0.4;
   //Visual glow
   fruit.style.transform = `scale(${1 + x * 0.3})`;
 }
+
+//-------------------------------------------------------------------------------------
 
 function animate() {
   document.querySelectorAll("#interaction-zone .fruit").forEach((fruit) => {
