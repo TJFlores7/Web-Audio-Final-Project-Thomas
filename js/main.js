@@ -276,7 +276,7 @@ const banana = createFruitPlayer("audio/bananaExcerpt.flac");
 const fig = createFruitPlayer("audio/figExcerpt.flac");
 const pomegranate = createFruitPlayer("audio/pomegranateExcerpt.flac");
 const strawberry = createFruitPlayer("audio/strawberryExcerpt.flac");
-const guava = new createFruitPlayer("audio/guavaExcerpt.flac");
+const guava = createFruitPlayer("audio/guavaExcerpt.flac");
 const watermelon = createFruitPlayer("audio/watermelonExcerpt.flac");
 const cantaloupe = createFruitPlayer("audio/cantaloupeExcerpt.flac");
 
@@ -311,12 +311,94 @@ document.querySelectorAll(".fruit").forEach((fruit) => {
   fruit.draggable = false;
 });
 
-document.querySelectorAll(".fruit").forEach((fruit) => {
-  enableFruitInteraction(fruit);
+let isDragging = false; //tracks whether user is currently dragging mouse - thanks Nush
+let activeFruit = null;
+
+//Function that forces no audio in the fruit deck until the fruit is in interaction-zone
+function isInsideZone(fruit) {
+  return fruit.parentElement === zone;
+}
+
+// Adding the fruit "drag" event
+const zone = document.getElementById("interaction-zone");
+
+document.addEventListener("pointerdown", (e) => {
+  if (!e.target.classList.contains("fruit")) return;
+
+  activeFruit = e.target;
+  isDragging = true;
+
+  const players = {
+    pineapple,
+    banana,
+    fig,
+    pomegranate,
+    strawberry,
+    guava,
+    watermelon,
+    cantaloupe,
+  };
+
+  const fruitObj = players[activeFruit.id];
+
+  if (fruitObj && isInsideZone(activeFruit) && !fruitObj.player.isPlaying) {
+    fruitObj.player.play();
+  }
+
+  const rect = zone.getBoundingClientRect();
+  const fruitRect = activeFruit.getBoundingClientRect();
+
+  const offsetX = fruitRect.width / 2;
+  const offsetY = fruitRect.height / 2;
+
+  //make it draggable
+  zone.appendChild(activeFruit);
+  activeFruit.style.position = "absolute";
+
+  //move it into the interaction zone by your cursor
+  activeFruit.style.left = `${e.clientX - rect.left - offsetX}px`;
+  activeFruit.style.top = `${e.clientY - rect.top - offsetY}px`;
 });
 
-function enableFruitInteraction(fruit) {
-  fruit.addEventListener("pointerdown", () => {
+//-------------------------------------------------------------------------------------
+
+//Moving fruit in real time
+zone.addEventListener("pointermove", (e) => {
+  if (!isDragging || !activeFruit) return;
+
+  const rect = zone.getBoundingClientRect();
+  const fruitRect = activeFruit.getBoundingClientRect();
+
+  const offsetX = fruitRect.width / 2;
+  const offsetY = fruitRect.height / 2;
+
+  activeFruit.style.left = `${e.clientX - rect.left - offsetX}px`;
+  activeFruit.style.top = `${e.clientY - rect.top - offsetY}px`;
+
+  const players = {
+    pineapple,
+    banana,
+    fig,
+    pomegranate,
+    strawberry,
+    guava,
+    watermelon,
+    cantaloupe,
+  };
+
+  const fruitObj = players[activeFruit.id];
+
+  // ONLY update audio if it's playing
+  if (fruitObj?.player.isPlaying) {
+    updateFruitAudio(activeFruit);
+  }
+});
+
+//-------------------------------------------------------------------------------------
+
+//Stop drag event
+window.addEventListener("pointerup", () => {
+  if (activeFruit && isInsideZone(activeFruit)) {
     const players = {
       pineapple,
       banana,
@@ -328,111 +410,16 @@ function enableFruitInteraction(fruit) {
       cantaloupe,
     };
 
-    players[fruit.id]?.player.play();
-  });
-}
+    const fruitObj = players[activeFruit.id];
 
-// Adding the fruit "drag" event
-const zone = document.getElementById("interaction-zone");
-let activeFruit = null;
-
-document.addEventListener("pointerdown", (e) => {
-  if (e.target.classList.contains("fruit")) {
-    activeFruit = e.target;
-
-    const rect = zone.getBoundingClientRect();
-
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
-
-    const fruitRect = activeFruit.getBoundingClientRect();
-    const offsetX = fruitRect.width / 2;
-    const offsetY = fruitRect.height / 2;
-
-    //make it draggable
-    zone.appendChild(activeFruit);
-    activeFruit.style.position = "absolute";
-
-    //move it into the interaction zone by your cursor
-    activeFruit.style.left = `${x - offsetX}px`;
-    activeFruit.style.top = `${y - offsetY}px`;
+    if (fruitObj && !fruitObj.player.isPlaying) {
+      fruitObj.player.play();
+    }
   }
-});
 
-//Moving fruit in real time
-zone.addEventListener("pointermove", (e) => {
-  if (!activeFruit) return;
-
-  const rect = zone.getBoundingClientRect();
-
-  const x = e.clientX - rect.left;
-  const y = e.clientY - rect.top;
-
-  const fruitRect = activeFruit.getBoundingClientRect();
-
-  const offsetX = fruitRect.width / 2;
-  const offsetY = fruitRect.height / 2;
-
-  activeFruit.style.left = `${x - offsetX}px`;
-  activeFruit.style.top = `${y - offsetY}px`;
-
-  updateFruitAudio(activeFruit);
-});
-
-//Stop drag event
-window.addEventListener("pointerup", () => {
+  isDragging = false;
   activeFruit = null;
 });
-
-// Old code that used "dragstart" and "drop" with uses of clone
-
-// let draggedFruit = null;
-
-// document.querySelectorAll(".fruit").forEach((fruit) => {
-//   fruit.addEventListener("dragstart", (e) => {
-//     draggedFruit = fruit;
-//   });
-// });
-
-// //-------------------------------------------------------------------------------------
-
-// // Allowing the drop in the interaction zone
-// const zone = document.getElementById("interaction-zone");
-
-// zone.addEventListener("dragover", (e) => {
-//   e.preventDefault();
-// });
-
-// zone.addEventListener("drop", (e) => {
-//   e.preventDefault();
-
-//   const existing = zone.querySelector(`#${draggedFruit.id}`);
-//   const rect = zone.getBoundingClientRect();
-//   const size = 60; // half of fruit width
-
-//   const x = e.clientX - rect.left;
-//   const y = e.clientY - rect.top;
-
-//   if (existing) {
-//     existing.style.left = `${x - size}px`;
-//     existing.style.top = `${y - size}px`;
-//   } else {
-//     const clone = draggedFruit.cloneNode(true);
-
-//     clone.style.position = "absolute";
-//     clone.style.left = `${x - size}px`;
-//     clone.style.top = `${y - size}px`;
-
-//     zone.appendChild(clone);
-
-//     enableFruitInteraction(clone);
-
-//     clone.draggable = true;
-//     clone.addEventListener("dragstart", () => {
-//       draggedFruit = clone;
-//     });
-//   }
-// });
 
 //-------------------------------------------------------------------------------------
 

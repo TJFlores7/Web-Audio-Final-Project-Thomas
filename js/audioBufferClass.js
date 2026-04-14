@@ -6,6 +6,7 @@ export class audioPlayer {
     this.outputNode = outputNode; // Another way of saying destination
     this.filePath = filePath; // The audio file itself
     this.buffer = null;
+    this.isPlaying = false;
   }
 
   async load() {
@@ -22,11 +23,24 @@ export class audioPlayer {
       return;
     }
 
-    const source = new AudioBufferSourceNode(this.audioContext); // Play the chosen audio file
-    source.buffer = this.buffer;
+    //Callback function and not continously generating new buffer nodes
 
-    source.connect(this.outputNode);
-    source.start();
+    if (this.isPlaying) return;
+
+    this.source = new AudioBufferSourceNode(this.audioContext); // Play the chosen audio file
+    this.source.buffer = this.buffer;
+
+    this.isPlaying = true;
+
+    this.source.onended = () => {
+      this.isPlaying = false;
+
+      this.source.disconnect();
+      this.source = null;
+    };
+
+    this.source.connect(this.outputNode);
+    this.source.start();
   }
 
   //   stop() {
