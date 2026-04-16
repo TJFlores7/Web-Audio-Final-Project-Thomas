@@ -262,8 +262,6 @@ function createFruitPlayer(url) {
   filter.type = "lowpass";
   filter.frequency.value = 20000;
 
-  // fruitGain.connect(filter);
-
   // Add panning
   const panner = new StereoPannerNode(myAudioContext);
   panner.pan.value = 0;
