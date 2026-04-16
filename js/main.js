@@ -246,16 +246,37 @@ wetSlider3.oninput = (e) => {
 
 //-------------------------------------------------------------------------------------
 
-// Play audio files for the different fruits
+// Create the fruit player for the fruits to play!
 
 function createFruitPlayer(url) {
   const input = new GainNode(myAudioContext);
 
-  const echo = createEcho(myAudioContext, input, masterGain);
-  const flanger = createFlanger(myAudioContext, input, masterGain);
+  // Volume control for the fruits
+  const fruitGain = new GainNode(myAudioContext);
+  fruitGain.gain.value = 1.0;
+
+  input.connect(fruitGain);
+
+  // Add filter effect
+  const filter = new BiquadFilterNode(myAudioContext);
+  filter.type = "lowpass";
+  filter.frequency.value = 20000;
+
+  // fruitGain.connect(filter);
+
+  // Add panning
+  const panner = new StereoPannerNode(myAudioContext);
+  panner.pan.value = 0;
+
+  fruitGain.connect(panner);
+  panner.connect(filter);
+
+  // Add effects
+  const echo = createEcho(myAudioContext, filter, masterGain);
+  const flanger = createFlanger(myAudioContext, filter, masterGain);
   const reverb = createReverb(
     myAudioContext,
-    input,
+    filter,
     masterGain,
     "audio/Casa Grande Domes Arizona.wav",
   );
@@ -268,8 +289,15 @@ function createFruitPlayer(url) {
     flanger,
     reverb,
     input,
+    fruitGain,
+    filter,
+    panner,
   };
 }
+
+//-------------------------------------------------------------------------------------
+
+// Activate fruit players
 
 const pineapple = createFruitPlayer("audio/pineappleExcerpt.flac");
 const banana = createFruitPlayer("audio/bananaExcerpt.flac");
@@ -307,6 +335,31 @@ document.getElementById("cantaloupe").onclick = () => cantaloupe.player.play();
 
 // Create Fruit Interactions
 
+const players = {
+  pineapple,
+  banana,
+  fig,
+  pomegranate,
+  strawberry,
+  guava,
+  watermelon,
+  cantaloupe,
+};
+
+Object.entries(players).forEach(([id, fruitObj]) => {
+  const element = document.getElementById(id);
+
+  if (!element) return; // safety
+
+  element.addEventListener("contextmenu", () => {
+    if (fruitObj.player.isPlaying) {
+      fruitObj.player.stop();
+    } else {
+      fruitObj.player.play();
+    }
+  });
+});
+
 document.querySelectorAll(".fruit").forEach((fruit) => {
   fruit.draggable = false;
 });
@@ -319,30 +372,22 @@ function isInsideZone(fruit) {
   return fruit.parentElement === zone;
 }
 
-// Adding the fruit "drag" event
+//-------------------------------------------------------------------------------------
+
+// Create controllable zone
 const zone = document.getElementById("interaction-zone");
 
+// Adding the fruit "drag" event
 document.addEventListener("pointerdown", (e) => {
   if (!e.target.classList.contains("fruit")) return;
 
   activeFruit = e.target;
   isDragging = true;
 
-  const players = {
-    pineapple,
-    banana,
-    fig,
-    pomegranate,
-    strawberry,
-    guava,
-    watermelon,
-    cantaloupe,
-  };
-
   const fruitObj = players[activeFruit.id];
 
   if (fruitObj && isInsideZone(activeFruit) && !fruitObj.player.isPlaying) {
-    fruitObj.player.play();
+    // fruitObj.player.play();
   }
 
   const rect = zone.getBoundingClientRect();
@@ -358,6 +403,8 @@ document.addEventListener("pointerdown", (e) => {
   //move it into the interaction zone by your cursor
   activeFruit.style.left = `${e.clientX - rect.left - offsetX}px`;
   activeFruit.style.top = `${e.clientY - rect.top - offsetY}px`;
+
+  activeFruit.classList.add("dragging");
 });
 
 //-------------------------------------------------------------------------------------
@@ -375,16 +422,15 @@ zone.addEventListener("pointermove", (e) => {
   activeFruit.style.left = `${e.clientX - rect.left - offsetX}px`;
   activeFruit.style.top = `${e.clientY - rect.top - offsetY}px`;
 
-  const players = {
-    pineapple,
-    banana,
-    fig,
-    pomegranate,
-    strawberry,
-    guava,
-    watermelon,
-    cantaloupe,
-  };
+  let newX = e.clientX - rect.left - offsetX;
+  let newY = e.clientY - rect.top - offsetY;
+
+  // Clamp inside zone
+  newX = Math.max(0, Math.min(newX, rect.width - fruitRect.width));
+  newY = Math.max(0, Math.min(newY, rect.height - fruitRect.height));
+
+  activeFruit.style.left = `${newX}px`;
+  activeFruit.style.top = `${newY}px`;
 
   const fruitObj = players[activeFruit.id];
 
@@ -399,22 +445,14 @@ zone.addEventListener("pointermove", (e) => {
 //Stop drag event
 window.addEventListener("pointerup", () => {
   if (activeFruit && isInsideZone(activeFruit)) {
-    const players = {
-      pineapple,
-      banana,
-      fig,
-      pomegranate,
-      strawberry,
-      guava,
-      watermelon,
-      cantaloupe,
-    };
-
     const fruitObj = players[activeFruit.id];
-
     if (fruitObj && !fruitObj.player.isPlaying) {
       fruitObj.player.play();
     }
+  }
+
+  if (activeFruit) {
+    activeFruit.classList.remove("dragging");
   }
 
   isDragging = false;
@@ -423,7 +461,7 @@ window.addEventListener("pointerup", () => {
 
 //-------------------------------------------------------------------------------------
 
-// Fruit response to position
+// Fruit responses to position change
 
 function updateFruitAudio(fruit) {
   const rect = zone.getBoundingClientRect();
@@ -451,47 +489,98 @@ function updateFruitAudio(fruit) {
 
   const fruitObj = players[fruit.id];
 
+  //If there is no fruit object, return with these functions
+
   if (!fruitObj) return;
 
   //effect mappings for each fruit
-
-  //Gradual change control
-
   const top = Math.max(0, 1 - y);
   const bottom = Math.max(0, y);
   const left = Math.max(0, 1 - x);
   const right = Math.max(0, x);
 
-  const echoAmount = Math.pow(top * left, 1.5);
-  const flangerAmount = bottom * left;
-  const reverbAmount = bottom * right;
+  let echoAmount = Math.pow(top * left, 1.5);
+  let flangerAmount = bottom * left;
+  let reverbAmount = bottom * right;
+
+  //---------------------------------------------------------------------------
+
+  // Effect regions for gradual change in the fruit's audio
+
+  // Dry audio
 
   if (isCenter) {
-    fruitObj.echo.wetGain.gain.value = 0;
-    fruitObj.flanger.wetGain2.gain.value = 0;
-    fruitObj.reverb.wetGain3.gain.value = 0;
+    echoAmount = 0;
+    flangerAmount = 0;
+    reverbAmount = 0;
   }
 
+  //---------------------------------------------------------------------------
+
   // Echo delay
+
   fruitObj.echo.delay.delayTime.linearRampToValueAtTime(x * 0.8, now + 0.05);
   fruitObj.echo.wetGain.gain.value = echoAmount;
+  const echoWet = echoAmount;
+  const echoDry = 1 - echoWet;
+
+  fruitObj.echo.wetGain.gain.value = echoWet;
+  fruitObj.echo.dryGain.gain.value = echoDry;
+
+  //---------------------------------------------------------------------------
 
   // Flanger
+
   fruitObj.flanger.lfo.frequency.linearRampToValueAtTime(
     0.1 + x * 5,
     now + 0.05,
   );
   fruitObj.flanger.wetGain2.gain.value = flangerAmount;
 
+  //---------------------------------------------------------------------------
+
   // Reverb
 
   fruitObj.reverb.wetGain3.gain.value = reverbAmount;
 
-  // all wet gains are set to 0 so it should be dry
+  const reverbWet = reverbAmount;
+  const reverbDry = 1 - reverbWet;
 
-  //Volume (top = louder)
+  fruitObj.reverb.wetGain3.gain.value = reverbWet;
+  fruitObj.reverb.dryGain3.gain.value = reverbDry;
+
+  //---------------------------------------------------------------------------
+
+  // Filter (lowpass)
+
+  const inTopRight = x > 0.5 && y < 0.5;
+
+  let filterAmount = 0;
+
+  if (inTopRight) {
+    const localX = (x - 0.5) * 2; // maps 0.5→1 → 0→1
+    const localY = (0.5 - y) * 2; // maps 0→0.5 → 1→0
+
+    filterAmount = Math.pow(localX * localY, 1.5);
+  }
+
+  // Map to frequency range
+  const minFreq = 200;
+  const maxFreq = 20000;
+
+  const freq = maxFreq * Math.pow(minFreq / maxFreq, filterAmount);
+  fruitObj.filter.frequency.linearRampToValueAtTime(freq, now + 0.05);
+
+  //---------------------------------------------------------------------------
+
+  // Pan control using X-axis
+  const pan = (x - 0.5) * 2; // maps 0→1 → -1→1
+  fruitObj.panner.pan.linearRampToValueAtTime(pan, now + 0.05);
+
+  //---------------------------------------------------------------------------
+
+  // Visual fruit changes
   fruit.style.opacity = 1 - y * 0.4;
-  //Visual glow
   fruit.style.transform = `scale(${1 + x * 0.3})`;
 }
 
@@ -506,3 +595,47 @@ function animate() {
 }
 
 animate();
+
+//-------------------------------------------------------------------------------------
+
+// Mouse wheel volume control for each fruit
+
+document.querySelectorAll(".fruit").forEach((fruit) => {
+  fruit.addEventListener(
+    "wheel",
+    (e) => {
+      e.preventDefault(); // prevent page scrolling
+
+      const fruitObj = players[fruit.id];
+      if (!fruitObj) return;
+
+      const now = myAudioContext.currentTime;
+
+      // Scroll direction
+      const delta = e.deltaY;
+      //scale sensitivity
+      const change = delta * -0.001;
+
+      // Adjust volume
+      let currentVol = fruitObj.fruitGain.gain.value;
+      let newVol = currentVol + change;
+
+      newVol = Math.max(0, Math.min(1, newVol));
+
+      // Apply volume
+      fruitObj.fruitGain.gain.cancelScheduledValues(now);
+      fruitObj.fruitGain.gain.linearRampToValueAtTime(newVol, now + 0.05);
+
+      // Visual feedback
+      const container = fruit.parentElement;
+      const bar = container.querySelector(".volume-bar");
+
+      if (bar) {
+        bar.style.setProperty("--vol", `${newVol * 100}%`);
+      }
+
+      fruit.style.filter = `brightness(${0.5 + newVol})`;
+    },
+    { passive: false },
+  );
+});

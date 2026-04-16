@@ -43,9 +43,11 @@ export class audioPlayer {
     this.source.start();
   }
 
-  //   stop() {
-  //     if (this.currentSource) {
-  //       this.currentSource.stop();
-  //     }
-  //   }
+  stop() {
+    if (this.source) {
+      this.source.stop();
+      this.source.disconnect();
+      this.isPlaying = false;
+    }
+  }
 }
