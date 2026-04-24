@@ -1,3 +1,4 @@
+/* Create main application with NO Scrolling! */
 html,
 body {
   margin: 0;
@@ -26,11 +27,29 @@ body {
   perspective: 800px;
 }
 
+/* Make the title "3D" */
 .title-3d {
   /* transform: rotateX(10deg); */
   transform-style: preserve-3d;
   animation: titleReveal 1.2s ease forwards;
 }
+
+@keyframes titleReveal {
+  0% {
+    opacity: 0;
+    transform: perspective(800px) rotateX(25deg) scale(0.7) translateY(40px);
+  }
+  60% {
+    opacity: 1;
+    transform: perspective(800px) rotateX(12deg) scale(1.05) translateY(-5px);
+  }
+  100% {
+    opacity: 1;
+    transform: perspective(800px) rotateX(10deg) scale(1) translateY(0);
+  }
+}
+
+/* ---------------------------------------------------------------- */
 
 /* Moving scanlines */
 #start-screen::before {
@@ -58,6 +77,9 @@ body {
   }
 }
 
+/* ---------------------------------------------------------------- */
+
+/* sizing and styling of the overall title */
 #start-screen h1 {
   font-size: clamp(4rem, 9vw, 8rem);
   line-height: 1.1;
@@ -73,27 +95,13 @@ body {
   transform-style: preserve-3d;
 }
 
-@keyframes titleReveal {
-  0% {
-    opacity: 0;
-    transform: perspective(800px) rotateX(25deg) scale(0.7) translateY(40px);
-  }
-  60% {
-    opacity: 1;
-    transform: perspective(800px) rotateX(12deg) scale(1.05) translateY(-5px);
-  }
-  100% {
-    opacity: 1;
-    transform: perspective(800px) rotateX(10deg) scale(1) translateY(0);
-  }
-}
-
 #start-screen.fade-out {
   opacity: 0;
   transition: opacity 0.6s ease;
   pointer-events: none;
 }
 
+/* Making the "Click to Start" pop in later and animated*/
 .start-text {
   opacity: 0;
   animation:
@@ -116,6 +124,8 @@ body {
     opacity: 0.9;
   }
 }
+
+/* ---------------------------------------------------------------- */
 
 /* Colorful fruit title */
 .fruit-text {
@@ -152,6 +162,9 @@ body {
     drop-shadow(0 0 8px rgba(139, 90, 43, 0.4));
 }
 
+/* ---------------------------------------------------------------- */
+
+/* Animating the "Fruit Basket" */
 .main-title span {
   display: block;
   opacity: 0;
@@ -185,6 +198,9 @@ body {
   }
 }
 
+/* ---------------------------------------------------------------- */
+
+/* Animating the "Taste Test" individually */
 .subtitle {
   display: inline-block;
 }
@@ -252,6 +268,8 @@ body {
   }
 }
 
+/* ---------------------------------------------------------------- */
+
 /* Start Screen exit animation */
 #start-screen.exit {
   animation: startScreenExit 1s ease forwards;
@@ -298,8 +316,9 @@ body {
   }
 }
 
-/* Main Application itself */
+/* ---------------------------------------------------------------- */
 
+/* Main Application itself */
 #app {
   height: 100vh;
   display: flex;
@@ -397,6 +416,8 @@ body {
   transform: translate(-50%, -50%);
 }
 
+/* ---------------------------------------------------------------- */
+
 /*Botton dock*/
 #fruit-dock {
   position: relative;
@@ -446,6 +467,8 @@ body {
   position: relative;
   display: inline-block;
 }
+
+/* ---------------------------------------------------------------- */
 
 /*volume control with visuals*/
 
