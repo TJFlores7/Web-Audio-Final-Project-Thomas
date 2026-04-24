@@ -164,107 +164,6 @@ function createReverb(myAudioContext, impulseURL) {
 
 //-------------------------------------------------------------------------------------
 
-// The Main FX Bus
-// const fxInput = new GainNode(myAudioContext);
-// fxInput.gain.value = 1.0;
-
-// Apply echo between fxInput and masterGain
-// const echo = createEcho(myAudioContext, fxInput, masterGain);
-
-// // Apply flanger between fxInput and masterGain
-// const flanger = createFlanger(myAudioContext, fxInput, masterGain);
-
-// // Apply reverb between fxInput and masterGain
-// const reverb = createReverb(
-//   myAudioContext,
-//   "audio/Casa Grande Domes Arizona.wav",
-// );
-
-//-------------------------------------------------------------------------------------
-
-// Add controllable sliders for the effects
-
-//Echo Delay sliders
-// const delaySlider = document.getElementById("delaySlider");
-
-// delaySlider.oninput = (e) => {
-//   echo.delay.delayTime.setValueAtTime(
-//     parseFloat(e.target.value) * 0.8, // 0 to 0.8 sec for mapping values
-//     myAudioContext.currentTime,
-//   );
-// };
-
-// const wetSlider1 = document.getElementById("wetSlider");
-
-// wetSlider1.oninput = (e) => {
-//   echo.wetGain.gain.setValueAtTime(
-//     parseFloat(e.target.value),
-//     myAudioContext.currentTime,
-//   );
-// };
-
-// //-------------------------------------------------------------------------------------
-
-// //Flanger sliders
-// const delaySlider2 = document.getElementById("delaySlider2");
-
-// delaySlider2.oninput = (e) => {
-//   const now = myAudioContext.currentTime;
-
-//   flanger.delay2.delayTime.cancelScheduledValues(now);
-//   flanger.delay2.delayTime.linearRampToValueAtTime(
-//     parseFloat(e.target.value),
-//     now + 0.02,
-//   );
-// };
-
-// const lfoSlider = document.getElementById("lfoSlider");
-// lfoSlider.oninput = (e) => {
-//   const now = myAudioContext.currentTime;
-
-//   flanger.lfo.frequency.cancelScheduledValues(now);
-//   flanger.lfo.frequency.linearRampToValueAtTime(
-//     parseFloat(e.target.value),
-//     now + 0.02,
-//   );
-// };
-
-// const lfoGainSlider = document.getElementById("lfoGainSlider");
-// lfoGainSlider.oninput = (e) => {
-//   const now = myAudioContext.currentTime;
-
-//   flanger.lfoGain.gain.cancelScheduledValues(now);
-//   flanger.lfoGain.gain.linearRampToValueAtTime(
-//     parseFloat(e.target.value),
-//     now + 0.02,
-//   );
-// };
-
-// const wetSlider2 = document.getElementById("wetSlider2");
-
-// wetSlider2.oninput = (e) => {
-//   const now = myAudioContext.currentTime;
-//   flanger.wetGain2.gain.cancelScheduledValues(now);
-//   flanger.wetGain2.gain.linearRampToValueAtTime(
-//     parseFloat(e.target.value),
-//     now + 0.02,
-//   );
-// };
-
-// //-------------------------------------------------------------------------------------
-
-// //Reverb sliders
-// const wetSlider3 = document.getElementById("wetSlider3");
-
-// wetSlider3.oninput = (e) => {
-//   reverb.wetGain3.gain.setValueAtTime(
-//     parseFloat(e.target.value),
-//     myAudioContext.currentTime,
-//   );
-// };
-
-//-------------------------------------------------------------------------------------
-
 // Create the fruit player for the fruits to play!
 
 function createFruitPlayer(url) {
@@ -504,17 +403,6 @@ function updateFruitAudio(fruit) {
 
   const now = myAudioContext.currentTime;
 
-  // const players = {
-  //   pineapple,
-  //   banana,
-  //   fig,
-  //   pomegranate,
-  //   strawberry,
-  //   guava,
-  //   watermelon,
-  //   cantaloupe,
-  // };
-
   const fruitObj = players[fruit.id];
 
   //If there is no fruit object, return with these functions
@@ -621,6 +509,8 @@ function updateFruitAudio(fruit) {
 
 //-------------------------------------------------------------------------------------
 
+// a small animation for each fruit
+
 function animate() {
   document.querySelectorAll("#interaction-zone .fruit").forEach((fruit) => {
     const fruitObj = players[fruit.id];
@@ -680,6 +570,10 @@ document.querySelectorAll(".fruit").forEach((fruit) => {
   );
 });
 
+//-------------------------------------------------------------------------------------
+
+// Function to change and update the audio by rotating
+
 function updateRotationAudio(fruitObj, fruitElement) {
   const now = myAudioContext.currentTime;
 
@@ -708,6 +602,10 @@ function updateRotationAudio(fruitObj, fruitElement) {
   );
 }
 
+//-------------------------------------------------------------------------------------
+
+// event listener for certain keys to control rotation (feedback)
+
 document.addEventListener("keydown", (e) => {
   if (!activeFruit) return;
 
@@ -733,15 +631,33 @@ document.addEventListener("keydown", (e) => {
   updateRotationAudio(fruitObj, activeFruit);
 });
 
+//-------------------------------------------------------------------------------------
+
+// Create a separate Start Screen!
+
 const startScreen = document.getElementById("start-screen");
 
 startScreen.addEventListener("click", async () => {
-  await myAudioContext.resume(); // Crucial to set up Web Audio
+  await myAudioContext.resume();
 
-  startScreen.style.opacity = "0";
-  startScreen.style.pointerEvents = "none";
+  startScreen.classList.add("exit");
 
   setTimeout(() => {
     startScreen.remove();
-  }, 500);
+  }, 1000); // match animation duration
+});
+
+// Create controllable App for animation purposes
+
+const app = document.getElementById("app");
+
+startScreen.addEventListener("click", async () => {
+  await myAudioContext.resume();
+
+  startScreen.classList.add("exit");
+  app.classList.add("active");
+
+  setTimeout(() => {
+    startScreen.remove();
+  }, 1000);
 });

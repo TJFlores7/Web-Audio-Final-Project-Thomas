@@ -252,6 +252,52 @@ body {
   }
 }
 
+/* Start Screen exit animation */
+#start-screen.exit {
+  animation: startScreenExit 1s ease forwards;
+}
+
+@keyframes startScreenExit {
+  0% {
+    opacity: 1;
+    transform: scale(1) rotateX(0deg);
+    filter: blur(0px);
+  }
+
+  50% {
+    opacity: 0.6;
+    transform: scale(1.05) rotateX(10deg);
+    filter: blur(2px);
+  }
+
+  100% {
+    opacity: 0;
+    transform: scale(0.9) rotateX(25deg);
+    filter: blur(6px);
+  }
+}
+
+#start-screen.exit::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: white;
+  opacity: 0;
+  animation: flash 0.4s ease forwards;
+}
+
+@keyframes flash {
+  0% {
+    opacity: 0;
+  }
+  40% {
+    opacity: 0.8;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
 /* Main Application itself */
 
 #app {
@@ -259,6 +305,14 @@ body {
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  opacity: 0;
+  transform: scale(1.05);
+  transition: all 0.8s ease;
+}
+
+#app.active {
+  opacity: 1;
+  transform: scale(1);
 }
 
 /* Performance Area*/
