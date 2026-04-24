@@ -173,6 +173,10 @@ function createFruitPlayer(url) {
   const fruitGain = new GainNode(myAudioContext);
   fruitGain.gain.value = 1.0;
 
+  const dryGain = new GainNode(myAudioContext);
+  dryGain.gain.value = 1.0;
+
+  dryGain.connect(masterGain);
   input.connect(fruitGain);
 
   // Add filter effect
@@ -193,12 +197,17 @@ function createFruitPlayer(url) {
   );
   // Chain them properly to avoid explosion
 
+  filter.connect(dryGain);
   fruitGain.connect(panner);
   panner.connect(filter);
 
   filter.connect(echo.input);
-  echo.output.connect(flanger.input);
-  flanger.output.connect(reverb.input);
+  echo.output.connect(masterGain);
+
+  filter.connect(flanger.input);
+  flanger.output.connect(masterGain);
+
+  filter.connect(reverb.input);
   reverb.output.connect(masterGain);
 
   const player = new audioPlayer(myAudioContext, input, url);
@@ -212,6 +221,7 @@ function createFruitPlayer(url) {
     fruitGain,
     filter,
     panner,
+    dryGain,
     rotation: 0,
   };
 }
@@ -419,6 +429,19 @@ function updateFruitAudio(fruit) {
   let flangerAmount = bottom * left;
   let reverbAmount = bottom * right;
 
+  const maxWet = Math.max(echoAmount, flangerAmount, reverbAmount);
+  const dryLevel = 1 - maxWet;
+
+  const total = echoAmount + flangerAmount + reverbAmount;
+
+  if (total > 1) {
+    echoAmount /= total;
+    flangerAmount /= total;
+    reverbAmount /= total;
+  }
+
+  fruitObj.dryGain.gain.linearRampToValueAtTime(dryLevel, now + 0.05);
+
   //---------------------------------------------------------------------------
 
   // Effect regions for gradual change in the fruit's audio
@@ -441,7 +464,6 @@ function updateFruitAudio(fruit) {
   const echoDry = 1 - echoWet;
 
   fruitObj.echo.wetGain.gain.value = echoWet;
-  fruitObj.echo.dryGain.gain.value = echoDry;
 
   if (echoAmount < 0.05) {
     fruitObj.echo.feedback.gain.value = 0;
@@ -460,14 +482,13 @@ function updateFruitAudio(fruit) {
   //---------------------------------------------------------------------------
 
   // Reverb
-
-  fruitObj.reverb.wetGain3.gain.value = reverbAmount;
+  const reverbScaled = Math.pow(reverbAmount, 2.5);
+  fruitObj.reverb.wetGain3.gain.value = reverbScaled;
 
   const reverbWet = reverbAmount;
   const reverbDry = 1 - reverbWet;
 
   fruitObj.reverb.wetGain3.gain.value = reverbWet;
-  fruitObj.reverb.dryGain3.gain.value = reverbDry;
 
   //---------------------------------------------------------------------------
 
