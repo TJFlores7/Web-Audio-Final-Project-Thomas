@@ -15,19 +15,33 @@
   </head>
 
   <body style="background-color: #708090">
-    <div class="project-title">
-      <h1>Fruit Basket's Taste Test</h1>
-      <h2>Thomas J. Flores</h2>
+    <!--Starting Screen for the main app-->
+
+    <div id="start-screen">
+      <div class="title-3d">
+        <h1 class="main-title">
+          <span class="fruit-text">FRUIT</span>
+          <span class="basket-text">BASKET</span>
+        </h1>
+      </div>
+
+      <h2 class="subtitle">
+        <span>T</span><span>a</span><span>s</span><span>t</span><span>e</span>
+        <span>&nbsp;</span>
+        <span>T</span><span>e</span><span>s</span><span>t</span>
+      </h2>
+
+      <p class="start-text">CLICK TO START</p>
     </div>
 
     <div id="app">
       <!--Main Interaction zone-->
       <div id="interaction-zone">
-        <div class="zone tl">Echo</div>
-        <div class="zone tr">Lowpass</div>
-        <div class="zone bl">Flanger</div>
-        <div class="zone br">Reverb</div>
-        <div class="zone center">Dry</div>
+        <div class="zone tl">Slices</div>
+        <div class="zone tr">Freeze Dry</div>
+        <div class="zone bl">Sour</div>
+        <div class="zone br">Smoothie</div>
+        <div class="zone center">Clean</div>
       </div>
 
       <!--The main fruits-->
@@ -67,9 +81,7 @@
       </div>
     </div>
 
-    //Backup FX sliders
-
-    <div id="fx-panel">
+    <!-- <div id="fx-panel">
       <h2>Main FX Bus sliders</h2>
       <h4>Echo Delay</h4>
 
@@ -115,6 +127,6 @@
         <label for="myrange">Wet Gain</label>
         <input type="range" min="0" max="1" step="0.01" id="wetSlider3" />
       </div>
-    </div>
+    </div> -->
   </body>
 </html>

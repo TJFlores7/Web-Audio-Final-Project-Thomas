@@ -9,18 +9,33 @@ masterGain.gain.value = 0.4;
 // Connect Gainnode to audio output
 masterGain.connect(myAudioContext.destination);
 
+const fx_Config = {
+  echo: {
+    feedback: 0.2,
+  },
+
+  flanger: {
+    maxDelay: 0.8,
+    lfodepth: 0.002,
+    feedback: 0.5,
+  },
+};
+
 //-------------------------------------------------------------------------------------
 
 // Create workable effects! It's all Gain Nodes and Delay Effects. JUST LABEL!!!!!!
 
 // Echo Delay effect
 
-function createEcho(myAudioContext, inputNode, outputNode) {
+function createEcho(myAudioContext) {
+  const input = myAudioContext.createGain();
+  const output = myAudioContext.createGain();
+
   const delay = new DelayNode(myAudioContext);
   delay.delayTime.value = 0.25; //250 ms delay
 
   const feedback = new GainNode(myAudioContext);
-  feedback.gain.value = 0.2;
+  feedback.gain.value = fx_Config.echo.feedback;
 
   const wetGain = new GainNode(myAudioContext);
   wetGain.gain.value = 0.4;
@@ -29,17 +44,17 @@ function createEcho(myAudioContext, inputNode, outputNode) {
   dryGain.gain.value = 1.0;
 
   // Dry path
-  inputNode.connect(dryGain);
-  dryGain.connect(outputNode);
+  input.connect(dryGain).connect(output);
 
   // Wet path (echo)
-  inputNode.connect(delay);
+  input.connect(delay);
   delay.connect(feedback);
   feedback.connect(delay); //feedback loop
-  delay.connect(wetGain);
-  wetGain.connect(outputNode);
+  delay.connect(wetGain).connect(output);
 
   return {
+    input,
+    output,
     delay,
     feedback,
     wetGain,
@@ -51,7 +66,10 @@ function createEcho(myAudioContext, inputNode, outputNode) {
 
 // Flanger effect
 
-function createFlanger(myAudioContext, inputNode, outputNode) {
+function createFlanger(myAudioContext) {
+  const input = myAudioContext.createGain();
+  const output = myAudioContext.createGain();
+
   const delay2 = new DelayNode(myAudioContext);
   delay2.delayTime.value = 0.003; //3 ms delay
 
@@ -59,10 +77,10 @@ function createFlanger(myAudioContext, inputNode, outputNode) {
   lfo.frequency.value = 0.02; //This will modulate the delay2
 
   const lfoGain = new GainNode(myAudioContext);
-  lfoGain.gain.value = 0.002; //enough to have a presence
+  lfoGain.gain.value = fx_Config.flanger.lfodepth; //enough to have a presence
 
   const feedback2 = new GainNode(myAudioContext);
-  feedback2.gain.value = 0.5; //strength control
+  feedback2.gain.value = fx_Config.flanger.feedback; //strength control
 
   const wetGain2 = new GainNode(myAudioContext);
   wetGain2.gain.value = 0.4;
@@ -71,21 +89,21 @@ function createFlanger(myAudioContext, inputNode, outputNode) {
   dryGain2.gain.value = 1.0;
 
   //Dry Path
-  inputNode.connect(dryGain2);
-  dryGain2.connect(outputNode);
+  input.connect(dryGain2).connect(output);
 
   //Wet Path
-  inputNode.connect(delay2);
+  input.connect(delay2);
   delay2.connect(feedback2);
   feedback2.connect(delay2);
   lfo.connect(lfoGain);
   lfoGain.connect(delay2.delayTime);
-  delay2.connect(wetGain2);
-  wetGain2.connect(outputNode);
+  delay2.connect(wetGain2).connect(output);
 
   lfo.start();
 
   return {
+    input,
+    output,
     delay2,
     lfo,
     lfoGain,
@@ -99,7 +117,10 @@ function createFlanger(myAudioContext, inputNode, outputNode) {
 
 //Reverb effect
 
-function createReverb(myAudioContext, inputNode, outputNode, impulseURL) {
+function createReverb(myAudioContext, impulseURL) {
+  const input = myAudioContext.createGain();
+  const output = myAudioContext.createGain();
+
   const convolver = myAudioContext.createConvolver();
 
   const dryGain3 = myAudioContext.createGain();
@@ -109,13 +130,11 @@ function createReverb(myAudioContext, inputNode, outputNode, impulseURL) {
   wetGain3.gain.value = 0.3;
 
   //Dry Path
-  inputNode.connect(dryGain3);
-  dryGain3.connect(outputNode);
+  input.connect(dryGain3).connect(output);
 
   //Wet Path
-  inputNode.connect(convolver);
-  convolver.connect(wetGain3);
-  wetGain3.connect(outputNode);
+  input.connect(convolver);
+  convolver.connect(wetGain3).connect(output);
 
   //Load impulse response
 
@@ -135,6 +154,8 @@ function createReverb(myAudioContext, inputNode, outputNode, impulseURL) {
   loadImpulse();
 
   return {
+    input,
+    output,
     convolver,
     dryGain3,
     wetGain3,
@@ -144,105 +165,103 @@ function createReverb(myAudioContext, inputNode, outputNode, impulseURL) {
 //-------------------------------------------------------------------------------------
 
 // The Main FX Bus
-const fxInput = new GainNode(myAudioContext);
-fxInput.gain.value = 1.0;
+// const fxInput = new GainNode(myAudioContext);
+// fxInput.gain.value = 1.0;
 
 // Apply echo between fxInput and masterGain
-const echo = createEcho(myAudioContext, fxInput, masterGain);
+// const echo = createEcho(myAudioContext, fxInput, masterGain);
 
-// Apply flanger between fxInput and masterGain
-const flanger = createFlanger(myAudioContext, fxInput, masterGain);
+// // Apply flanger between fxInput and masterGain
+// const flanger = createFlanger(myAudioContext, fxInput, masterGain);
 
-// Apply reverb between fxInput and masterGain
-const reverb = createReverb(
-  myAudioContext,
-  fxInput,
-  masterGain,
-  "audio/Casa Grande Domes Arizona.wav",
-);
+// // Apply reverb between fxInput and masterGain
+// const reverb = createReverb(
+//   myAudioContext,
+//   "audio/Casa Grande Domes Arizona.wav",
+// );
 
 //-------------------------------------------------------------------------------------
 
 // Add controllable sliders for the effects
 
 //Echo Delay sliders
-const delaySlider = document.getElementById("delaySlider");
+// const delaySlider = document.getElementById("delaySlider");
 
-delaySlider.oninput = (e) => {
-  echo.delay.delayTime.setValueAtTime(
-    parseFloat(e.target.value) * 0.8, // 0 to 0.8 sec for mapping values
-    myAudioContext.currentTime,
-  );
-};
+// delaySlider.oninput = (e) => {
+//   echo.delay.delayTime.setValueAtTime(
+//     parseFloat(e.target.value) * 0.8, // 0 to 0.8 sec for mapping values
+//     myAudioContext.currentTime,
+//   );
+// };
 
-const wetSlider1 = document.getElementById("wetSlider");
+// const wetSlider1 = document.getElementById("wetSlider");
 
-wetSlider1.oninput = (e) => {
-  echo.wetGain.gain.setValueAtTime(
-    parseFloat(e.target.value),
-    myAudioContext.currentTime,
-  );
-};
+// wetSlider1.oninput = (e) => {
+//   echo.wetGain.gain.setValueAtTime(
+//     parseFloat(e.target.value),
+//     myAudioContext.currentTime,
+//   );
+// };
 
-//-------------------------------------------------------------------------------------
+// //-------------------------------------------------------------------------------------
 
-//Flanger sliders
-const delaySlider2 = document.getElementById("delaySlider2");
+// //Flanger sliders
+// const delaySlider2 = document.getElementById("delaySlider2");
 
-delaySlider2.oninput = (e) => {
-  const now = myAudioContext.currentTime;
+// delaySlider2.oninput = (e) => {
+//   const now = myAudioContext.currentTime;
 
-  flanger.delay2.delayTime.cancelScheduledValues(now);
-  flanger.delay2.delayTime.linearRampToValueAtTime(
-    parseFloat(e.target.value),
-    now + 0.02,
-  );
-};
+//   flanger.delay2.delayTime.cancelScheduledValues(now);
+//   flanger.delay2.delayTime.linearRampToValueAtTime(
+//     parseFloat(e.target.value),
+//     now + 0.02,
+//   );
+// };
 
-const lfoSlider = document.getElementById("lfoSlider");
-lfoSlider.oninput = (e) => {
-  const now = myAudioContext.currentTime;
+// const lfoSlider = document.getElementById("lfoSlider");
+// lfoSlider.oninput = (e) => {
+//   const now = myAudioContext.currentTime;
 
-  flanger.lfo.frequency.cancelScheduledValues(now);
-  flanger.lfo.frequency.linearRampToValueAtTime(
-    parseFloat(e.target.value),
-    now + 0.02,
-  );
-};
+//   flanger.lfo.frequency.cancelScheduledValues(now);
+//   flanger.lfo.frequency.linearRampToValueAtTime(
+//     parseFloat(e.target.value),
+//     now + 0.02,
+//   );
+// };
 
-const lfoGainSlider = document.getElementById("lfoGainSlider");
-lfoGainSlider.oninput = (e) => {
-  const now = myAudioContext.currentTime;
+// const lfoGainSlider = document.getElementById("lfoGainSlider");
+// lfoGainSlider.oninput = (e) => {
+//   const now = myAudioContext.currentTime;
 
-  flanger.lfoGain.gain.cancelScheduledValues(now);
-  flanger.lfoGain.gain.linearRampToValueAtTime(
-    parseFloat(e.target.value),
-    now + 0.02,
-  );
-};
+//   flanger.lfoGain.gain.cancelScheduledValues(now);
+//   flanger.lfoGain.gain.linearRampToValueAtTime(
+//     parseFloat(e.target.value),
+//     now + 0.02,
+//   );
+// };
 
-const wetSlider2 = document.getElementById("wetSlider2");
+// const wetSlider2 = document.getElementById("wetSlider2");
 
-wetSlider2.oninput = (e) => {
-  const now = myAudioContext.currentTime;
-  flanger.wetGain2.gain.cancelScheduledValues(now);
-  flanger.wetGain2.gain.linearRampToValueAtTime(
-    parseFloat(e.target.value),
-    now + 0.02,
-  );
-};
+// wetSlider2.oninput = (e) => {
+//   const now = myAudioContext.currentTime;
+//   flanger.wetGain2.gain.cancelScheduledValues(now);
+//   flanger.wetGain2.gain.linearRampToValueAtTime(
+//     parseFloat(e.target.value),
+//     now + 0.02,
+//   );
+// };
 
-//-------------------------------------------------------------------------------------
+// //-------------------------------------------------------------------------------------
 
-//Reverb sliders
-const wetSlider3 = document.getElementById("wetSlider3");
+// //Reverb sliders
+// const wetSlider3 = document.getElementById("wetSlider3");
 
-wetSlider3.oninput = (e) => {
-  reverb.wetGain3.gain.setValueAtTime(
-    parseFloat(e.target.value),
-    myAudioContext.currentTime,
-  );
-};
+// wetSlider3.oninput = (e) => {
+//   reverb.wetGain3.gain.setValueAtTime(
+//     parseFloat(e.target.value),
+//     myAudioContext.currentTime,
+//   );
+// };
 
 //-------------------------------------------------------------------------------------
 
@@ -266,18 +285,22 @@ function createFruitPlayer(url) {
   const panner = new StereoPannerNode(myAudioContext);
   panner.pan.value = 0;
 
+  // Add effects
+  const echo = createEcho(myAudioContext);
+  const flanger = createFlanger(myAudioContext);
+  const reverb = createReverb(
+    myAudioContext,
+    "audio/Casa Grande Domes Arizona.wav",
+  );
+  // Chain them properly to avoid explosion
+
   fruitGain.connect(panner);
   panner.connect(filter);
 
-  // Add effects
-  const echo = createEcho(myAudioContext, filter, masterGain);
-  const flanger = createFlanger(myAudioContext, filter, masterGain);
-  const reverb = createReverb(
-    myAudioContext,
-    filter,
-    masterGain,
-    "audio/Casa Grande Domes Arizona.wav",
-  );
+  filter.connect(echo.input);
+  echo.output.connect(flanger.input);
+  flanger.output.connect(reverb.input);
+  reverb.output.connect(masterGain);
 
   const player = new audioPlayer(myAudioContext, input, url);
 
@@ -290,6 +313,7 @@ function createFruitPlayer(url) {
     fruitGain,
     filter,
     panner,
+    rotation: 0,
   };
 }
 
@@ -349,7 +373,13 @@ Object.entries(players).forEach(([id, fruitObj]) => {
 
   if (!element) return; // safety
 
-  element.addEventListener("contextmenu", () => {
+  element.addEventListener("contextmenu", (e) => {
+    const isInZone = isInsideZone(element);
+
+    if (isInZone) {
+      e.preventDefault(); // stops the browser menu
+    }
+
     if (fruitObj.player.isPlaying) {
       fruitObj.player.stop();
     } else {
@@ -474,16 +504,16 @@ function updateFruitAudio(fruit) {
 
   const now = myAudioContext.currentTime;
 
-  const players = {
-    pineapple,
-    banana,
-    fig,
-    pomegranate,
-    strawberry,
-    guava,
-    watermelon,
-    cantaloupe,
-  };
+  // const players = {
+  //   pineapple,
+  //   banana,
+  //   fig,
+  //   pomegranate,
+  //   strawberry,
+  //   guava,
+  //   watermelon,
+  //   cantaloupe,
+  // };
 
   const fruitObj = players[fruit.id];
 
@@ -524,6 +554,10 @@ function updateFruitAudio(fruit) {
 
   fruitObj.echo.wetGain.gain.value = echoWet;
   fruitObj.echo.dryGain.gain.value = echoDry;
+
+  if (echoAmount < 0.05) {
+    fruitObj.echo.feedback.gain.value = 0;
+  }
 
   //---------------------------------------------------------------------------
 
@@ -579,14 +613,22 @@ function updateFruitAudio(fruit) {
 
   // Visual fruit changes
   fruit.style.opacity = 1 - y * 0.4;
-  fruit.style.transform = `scale(${1 + x * 0.3})`;
+
+  const rotation = fruitObj?.rotation || 0;
+
+  fruit.style.transform = `rotate(${rotation}deg) scale(${1 + x * 0.3})`;
 }
 
 //-------------------------------------------------------------------------------------
 
 function animate() {
   document.querySelectorAll("#interaction-zone .fruit").forEach((fruit) => {
+    const fruitObj = players[fruit.id];
+
+    if (!fruitObj) return;
+
     updateFruitAudio(fruit);
+    updateRotationAudio(fruitObj, fruit);
   });
 
   requestAnimationFrame(animate);
@@ -636,4 +678,70 @@ document.querySelectorAll(".fruit").forEach((fruit) => {
     },
     { passive: false },
   );
+});
+
+function updateRotationAudio(fruitObj, fruitElement) {
+  const now = myAudioContext.currentTime;
+
+  // Normalize the main rotation (0 -> 360) (0 -> 1)
+  const norm = (((fruitObj.rotation % 360) + 360) % 360) / 360;
+
+  // Controlled feedback unless you want a spiraling feedback that blows up :)
+  const echoFeedback = Math.min(0.9, Math.pow(norm, 2) * 0.75);
+  const flangerFeedback = Math.min(0.9, Math.pow(norm, 2) * 0.8);
+
+  let echoAmount = fruitObj.echoAmount;
+  const targetFeedback = echoAmount < 0.05 ? 0 : echoFeedback;
+
+  // Apply to echo
+  fruitObj.echo.feedback.gain.cancelScheduledValues(now);
+  fruitObj.echo.feedback.gain.linearRampToValueAtTime(
+    targetFeedback,
+    now + 0.1,
+  );
+
+  // Apply to flanger
+  fruitObj.flanger.feedback2.gain.cancelScheduledValues(now);
+  fruitObj.flanger.feedback2.gain.linearRampToValueAtTime(
+    flangerFeedback,
+    now + 0.05,
+  );
+}
+
+document.addEventListener("keydown", (e) => {
+  if (!activeFruit) return;
+
+  const fruitObj = players[activeFruit.id];
+  if (!fruitObj) return;
+
+  const step = 5; // degrees per press
+
+  if (e.key === "ArrowLeft" || e.key === "a") {
+    fruitObj.rotation -= step;
+  }
+
+  if (e.key === "ArrowRight" || e.key === "d") {
+    fruitObj.rotation += step;
+  }
+
+  // keep rotation within 360 range
+  fruitObj.rotation = fruitObj.rotation % 360;
+
+  // FORCE VISUAL UPDATE
+  updateFruitAudio(activeFruit);
+  // Update sound
+  updateRotationAudio(fruitObj, activeFruit);
+});
+
+const startScreen = document.getElementById("start-screen");
+
+startScreen.addEventListener("click", async () => {
+  await myAudioContext.resume(); // Crucial to set up Web Audio
+
+  startScreen.style.opacity = "0";
+  startScreen.style.pointerEvents = "none";
+
+  setTimeout(() => {
+    startScreen.remove();
+  }, 500);
 });
