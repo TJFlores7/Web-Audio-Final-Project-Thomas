@@ -2,6 +2,36 @@ import { audioPlayer } from "./audioBufferClass.js";
 
 const myAudioContext = new AudioContext();
 
+//-------------------------------------------------------------------------------------
+
+// Create sound loader for the UI (future me)
+
+async function loadUISound(url) {
+  const response = await fetch(url);
+  const arrayBuffer = await response.arrayBuffer();
+  return await myAudioContext.decodeAudioData(arrayBuffer);
+}
+
+function playUISound(buffer, volume = 0.5, offset = 0) {
+  const source = myAudioContext.createBufferSource();
+  source.buffer = buffer;
+
+  const gain = myAudioContext.createGain();
+  gain.gain.value = volume;
+
+  source.connect(gain).connect(masterGain);
+  source.start(0, offset);
+}
+
+const uiSounds = {
+  fruitBasketBlip: await loadUISound("audio/fruitBasketBlip.wav"),
+  tasteTestBlip: await loadUISound("audio/tasteTestBlip.wav"),
+  intro: await loadUISound("audio/fruitBasketTasteTestIntro.wav"),
+  woosh: await loadUISound("audio/transitionWoosh.wav"),
+};
+
+//-------------------------------------------------------------------------------------
+
 // Overall volume
 const masterGain = myAudioContext.createGain();
 masterGain.gain.value = 0.4;
@@ -657,32 +687,39 @@ document.addEventListener("keydown", (e) => {
 // Create a separate Start Screen!
 
 const startScreen = document.getElementById("start-screen");
-
-startScreen.addEventListener("click", async () => {
-  await myAudioContext.resume();
-
-  startScreen.classList.add("exit");
-
-  setTimeout(() => {
-    startScreen.remove();
-  }, 1000); // match animation duration
-});
-
-// Create controllable App for animation purposes
-
 const app = document.getElementById("app");
 
 startScreen.addEventListener("click", async () => {
   await myAudioContext.resume();
+
+  // transition sound
+  playUISound(uiSounds.woosh, 0.6);
 
   startScreen.classList.add("exit");
   app.classList.add("active");
 
   setTimeout(() => {
     startScreen.remove();
-    startScreen.style.pointerEvents = "none";
   }, 1000);
 });
+
+// FRUIT BASKET (~0.4s)
+setTimeout(() => {
+  playUISound(uiSounds.fruitBasketBlip, 0.6, 0);
+}, 400);
+
+// TASTE TEST
+for (let i = 0; i < 10; i++) {
+  setTimeout(
+    () => {
+      playUISound(uiSounds.tasteTestBlip, 0.3);
+    },
+    1600 + i * 100,
+  );
+}
+setTimeout(() => {
+  playUISound(uiSounds.intro, 0.5);
+}, 2800);
 
 //-------------------------------------------------------------------------------------
 
