@@ -692,38 +692,45 @@ const app = document.getElementById("app");
 startScreen.addEventListener("click", async () => {
   await myAudioContext.resume();
 
-  // transition sound
-  playUISound(uiSounds.woosh, 0.6);
+  // play woosh
+  playUISound(uiSounds.woosh, 0.9);
 
-  startScreen.classList.add("exit");
-  app.classList.add("active");
+  // IMPACT first
+  startScreen.classList.add("impact");
+
+  // THEN exit after a short delay
+  setTimeout(() => {
+    startScreen.classList.add("exit");
+    app.classList.add("active");
+  }, 250); // tweak this (200–350ms is sweet spot)
 
   setTimeout(() => {
     startScreen.remove();
-  }, 1000);
+  }, 1200); // match exit timing + delay
 });
 
-// FRUIT BASKET (~0.4s)
+// FRUIT BASKET blip
 setTimeout(() => {
-  playUISound(uiSounds.fruitBasketBlip, 0.6, 0);
+  playUISound(uiSounds.fruitBasketBlip, 1.0, 0);
 }, 400);
 
-// TASTE TEST
+// TASTE TEST blip
 for (let i = 0; i < 10; i++) {
   setTimeout(
     () => {
-      playUISound(uiSounds.tasteTestBlip, 0.3);
+      playUISound(uiSounds.tasteTestBlip, 0.5);
     },
     1600 + i * 100,
   );
 }
 setTimeout(() => {
-  playUISound(uiSounds.intro, 0.5);
+  playUISound(uiSounds.intro, 0.8);
 }, 2800);
 
 //-------------------------------------------------------------------------------------
 
 // Create a help button for instructions to play the application!
+
 const helpBtn = document.getElementById("help-btn");
 const helpOverlay = document.getElementById("help-overlay");
 const closeHelp = document.getElementById("close-help");

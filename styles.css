@@ -55,8 +55,8 @@ body {
 #start-screen::before {
   content: "";
   position: absolute;
-  width: 100%;
-  height: 200%;
+  inset: 0;
+
   background: repeating-linear-gradient(
     to bottom,
     rgba(0, 255, 255, 0.05) 0px,
@@ -64,17 +64,17 @@ body {
     transparent 2px,
     transparent 4px
   );
+
   animation: scanMove 6s linear infinite;
-  pointer-events: none;
 }
 
 @keyframes scanMove {
   from {
-    transform: translateY(0);
+    background-position-y: 0;
   }
   to {
-    transform: translateY(-50%);
-  }
+    background-position-y: 4px;
+  } /* match pattern size */
 }
 
 /* ---------------------------------------------------------------- */
@@ -265,6 +265,80 @@ body {
   100% {
     opacity: 1;
     transform: translateY(0) rotateX(0);
+  }
+}
+
+/* ---------------------------------------------------------------- */
+
+#start-screen.impact::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+
+  background: radial-gradient(
+    circle at center,
+    rgba(0, 255, 255, 0.6) 0%,
+    rgba(0, 255, 255, 0.3) 10%,
+    transparent 40%
+  );
+
+  transform: scale(0.2);
+  opacity: 0;
+
+  animation: shockwave 0.6s ease-out forwards;
+  pointer-events: none;
+}
+
+@keyframes shockwave {
+  0% {
+    transform: scale(0.2);
+    opacity: 0.8;
+  }
+  60% {
+    opacity: 0.4;
+  }
+  100% {
+    transform: scale(2.5);
+    opacity: 0;
+  }
+}
+
+#start-screen.impact {
+  animation: screenPunch 0.3s ease;
+}
+
+@keyframes screenPunch {
+  0% {
+    transform: scale(1);
+  }
+  30% {
+    transform: scale(1.08);
+  }
+  60% {
+    transform: scale(0.97);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+#start-screen.impact::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+
+  background: rgba(0, 206, 209, 0.6); /* your cyan theme */
+  opacity: 0;
+
+  animation: colorFlash 0.3s ease;
+}
+
+@keyframes colorFlash {
+  0% {
+    opacity: 0.8;
+  }
+  100% {
+    opacity: 0;
   }
 }
 
