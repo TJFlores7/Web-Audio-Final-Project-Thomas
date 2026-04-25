@@ -5,8 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Web Audio Final Project Spring 2026</title>
 
-    <script type="module" src="js/main.js"></script>
-
     <link rel="stylesheet" href="styles.css" />
     <link
       href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap"
@@ -15,7 +13,7 @@
   </head>
 
   <body style="background-color: #708090">
-    <!--Starting Screen for the main app-->
+    <!--Starting Screen for the main app -->
 
     <div id="start-screen">
       <div class="title-3d">
@@ -35,7 +33,7 @@
     </div>
 
     <div id="app">
-      <!--Main Interaction zone-->
+      <!--Main Interaction zone -->
       <div id="interaction-zone">
         <div class="zone tl">Slices</div>
         <div class="zone tr">Freeze Dry</div>
@@ -44,7 +42,22 @@
         <div class="zone center">Clean</div>
       </div>
 
-      <!--The main fruits-->
+      <!--Help Button -->
+      <button id="help-btn">?</button>
+
+      <div id="help-overlay" class="hidden">
+        <div class="help-content">
+          <h2>How to Play</h2>
+          <p>• Drag fruits into the zone to activate them</p>
+          <p>• Move the fruits around to change texture</p>
+          <p>• Scroll on the fruit to adjust volume</p>
+          <p>• Press A/D or ← → to rotate the fruit for feedback</p>
+          <p>• Right-click the fruit to stop</p>
+          <button id="close-help">Close</button>
+        </div>
+      </div>
+
+      <!--The main fruits -->
       <div id="fruit-dock">
         <div class="fruit-container">
           <img src="imgs/Pineapple_icon.png" class="fruit" id="pineapple" />
@@ -80,5 +93,6 @@
         </div>
       </div>
     </div>
+    <script type="module" src="js/main.js"></script>
   </body>
 </html>

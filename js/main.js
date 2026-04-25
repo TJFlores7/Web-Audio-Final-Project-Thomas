@@ -680,5 +680,28 @@ startScreen.addEventListener("click", async () => {
 
   setTimeout(() => {
     startScreen.remove();
+    startScreen.style.pointerEvents = "none";
   }, 1000);
+});
+
+//-------------------------------------------------------------------------------------
+
+// Create a help button for instructions to play the application!
+const helpBtn = document.getElementById("help-btn");
+const helpOverlay = document.getElementById("help-overlay");
+const closeHelp = document.getElementById("close-help");
+
+helpBtn.addEventListener("click", () => {
+  helpOverlay.classList.add("active");
+});
+
+closeHelp.addEventListener("click", () => {
+  helpOverlay.classList.remove("active");
+  console.log("CLOSE CLICKED");
+});
+
+helpOverlay.addEventListener("click", (e) => {
+  if (e.target === helpOverlay) {
+    helpOverlay.classList.remove("active");
+  }
 });
