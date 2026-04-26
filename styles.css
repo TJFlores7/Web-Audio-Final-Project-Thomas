@@ -25,6 +25,7 @@ body {
   text-align: center;
   overflow: hidden;
   perspective: 800px;
+  pointer-events: none;
 }
 
 /* Make the title "3D" */
@@ -266,6 +267,11 @@ body {
     opacity: 1;
     transform: translateY(0) rotateX(0);
   }
+}
+
+#start-screen.ready {
+  pointer-events: auto;
+  cursor: pointer;
 }
 
 /* ---------------------------------------------------------------- */

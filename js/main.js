@@ -281,17 +281,6 @@ await Promise.all([
   cantaloupe.player.load(),
 ]);
 
-// Buttons for audio files to play
-document.getElementById("pineapple").onclick = () => pineapple.player.play();
-document.getElementById("banana").onclick = () => banana.player.play();
-document.getElementById("fig").onclick = () => fig.player.play();
-document.getElementById("pomegranate").onclick = () =>
-  pomegranate.player.play();
-document.getElementById("strawberry").onclick = () => strawberry.player.play();
-document.getElementById("guava").onclick = () => guava.player.play();
-document.getElementById("watermelon").onclick = () => watermelon.player.play();
-document.getElementById("cantaloupe").onclick = () => cantaloupe.player.play();
-
 //-------------------------------------------------------------------------------------
 
 // Create Fruit Interactions
@@ -344,6 +333,10 @@ function isInsideZone(fruit) {
 // Create controllable zone
 const zone = document.getElementById("interaction-zone");
 
+let dragStartX = 0;
+let dragStartY = 0;
+let hasMoved = false;
+
 // Adding the fruit "drag" event
 document.addEventListener("pointerdown", (e) => {
   if (!e.target.classList.contains("fruit")) return;
@@ -351,33 +344,41 @@ document.addEventListener("pointerdown", (e) => {
   activeFruit = e.target;
   isDragging = true;
 
-  const fruitObj = players[activeFruit.id];
-
-  if (fruitObj && isInsideZone(activeFruit) && !fruitObj.player.isPlaying) {
-    // fruitObj.player.play();
-  }
-
-  const rect = zone.getBoundingClientRect();
-  const fruitRect = activeFruit.getBoundingClientRect();
-
-  const offsetX = fruitRect.width / 2;
-  const offsetY = fruitRect.height / 2;
-
-  //make it draggable
-  zone.appendChild(activeFruit);
-  activeFruit.style.position = "absolute";
-
-  //move it into the interaction zone by your cursor
-  activeFruit.style.left = `${e.clientX - rect.left - offsetX}px`;
-  activeFruit.style.top = `${e.clientY - rect.top - offsetY}px`;
-
-  activeFruit.classList.add("dragging");
+  dragStartX = e.clientX;
+  dragStartY = e.clientY;
+  hasMoved = false;
 });
 
 //-------------------------------------------------------------------------------------
 
 //Moving fruit in real time
+
 zone.addEventListener("pointermove", (e) => {
+  if (!hasMoved) {
+    const dx = Math.abs(e.clientX - dragStartX);
+    const dy = Math.abs(e.clientY - dragStartY);
+
+    if (dx > 5 || dy > 5) {
+      hasMoved = true;
+
+      // ONLY now do we move fruit into zone
+      const rect = zone.getBoundingClientRect();
+      const fruitRect = activeFruit.getBoundingClientRect();
+
+      const offsetX = fruitRect.width / 2;
+      const offsetY = fruitRect.height / 2;
+
+      zone.appendChild(activeFruit);
+      activeFruit.style.position = "absolute";
+
+      activeFruit.style.left = `${e.clientX - rect.left - offsetX}px`;
+      activeFruit.style.top = `${e.clientY - rect.top - offsetY}px`;
+
+      activeFruit.classList.add("dragging");
+    }
+  }
+  if (!hasMoved) return;
+
   if (!isDragging || !activeFruit) return;
 
   const rect = zone.getBoundingClientRect();
@@ -393,8 +394,8 @@ zone.addEventListener("pointermove", (e) => {
   let newY = e.clientY - rect.top - offsetY;
 
   // Clamp inside zone
-  newX = Math.max(0, Math.min(newX, rect.width - fruitRect.width));
-  newY = Math.max(0, Math.min(newY, rect.height - fruitRect.height));
+  newX = Math.max(0, Math.min(newX, zoneWidth - fruitRect.width));
+  newY = Math.max(0, Math.min(newY, zoneHeight - fruitRect.height));
 
   activeFruit.style.left = `${newX}px`;
   activeFruit.style.top = `${newY}px`;
@@ -410,8 +411,9 @@ zone.addEventListener("pointermove", (e) => {
 //-------------------------------------------------------------------------------------
 
 //Stop drag event
+
 window.addEventListener("pointerup", () => {
-  if (activeFruit && isInsideZone(activeFruit)) {
+  if (hasMoved && activeFruit && isInsideZone(activeFruit)) {
     const fruitObj = players[activeFruit.id];
     if (fruitObj && !fruitObj.player.isPlaying) {
       fruitObj.player.play();
@@ -432,6 +434,8 @@ window.addEventListener("pointerup", () => {
 
 function updateFruitAudio(fruit) {
   const rect = zone.getBoundingClientRect();
+  const zoneWidth = zone.clientWidth;
+  const zoneHeight = zone.clientHeight;
   const fruitRect = fruit.getBoundingClientRect();
 
   const x = (fruitRect.left - rect.left) / rect.width;
@@ -594,6 +598,7 @@ document.querySelectorAll(".fruit").forEach((fruit) => {
 
       // Scroll direction
       const delta = e.deltaY;
+
       //scale sensitivity
       const change = delta * -0.001;
 
@@ -655,7 +660,7 @@ function updateRotationAudio(fruitObj, fruitElement) {
 
 //-------------------------------------------------------------------------------------
 
-// event listener for certain keys to control rotation (feedback)
+// Event listener for certain keys to control rotation (feedback)
 
 document.addEventListener("keydown", (e) => {
   if (!activeFruit) return;
@@ -689,24 +694,28 @@ document.addEventListener("keydown", (e) => {
 const startScreen = document.getElementById("start-screen");
 const app = document.getElementById("app");
 
+let canStart = false;
+let hasStarted = false;
+
 startScreen.addEventListener("click", async () => {
+  if (!canStart || hasStarted) return;
+
+  hasStarted = true;
+
   await myAudioContext.resume();
 
-  // play woosh
   playUISound(uiSounds.woosh, 0.9);
 
-  // IMPACT first
   startScreen.classList.add("impact");
 
-  // THEN exit after a short delay
   setTimeout(() => {
     startScreen.classList.add("exit");
     app.classList.add("active");
-  }, 250); // tweak this (200–350ms is sweet spot)
+  }, 250);
 
   setTimeout(() => {
     startScreen.remove();
-  }, 1200); // match exit timing + delay
+  }, 1200);
 });
 
 // FRUIT BASKET blip
@@ -726,6 +735,11 @@ for (let i = 0; i < 10; i++) {
 setTimeout(() => {
   playUISound(uiSounds.intro, 0.8);
 }, 2800);
+
+setTimeout(() => {
+  canStart = true;
+  startScreen.classList.add("ready");
+}, 2800); // match your CSS delay
 
 //-------------------------------------------------------------------------------------
 
